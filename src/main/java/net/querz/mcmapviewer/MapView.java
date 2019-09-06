@@ -23,7 +23,6 @@ public class MapView extends Canvas {
 	private GraphicsContext context;
 	private File mapFile;
 	private byte[] imageData;
-	private int id;
 	private Point2i center;
 	private byte scale;
 	private int dimension;
@@ -77,7 +76,6 @@ public class MapView extends Canvas {
 			}
 		}
 
-		id = data.getInt("ID");
 		locked = data.getBoolean("locked");
 		scale = data.getByte("scale");
 		trackingPosition = data.getBoolean("trackingPosition");
