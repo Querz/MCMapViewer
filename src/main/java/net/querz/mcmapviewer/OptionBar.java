@@ -1,5 +1,6 @@
 package net.querz.mcmapviewer;
 
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -13,6 +14,8 @@ public class OptionBar extends MenuBar {
 	private MenuItem open = new MenuItem("Open");
 	private MenuItem quit = new MenuItem("Quit");
 
+	private Label about = new Label("About");
+
 	public OptionBar(Stage primaryStage) {
 		getStyleClass().add("option-bar");
 
@@ -20,5 +23,9 @@ public class OptionBar extends MenuBar {
 
 		open.setOnAction(e -> DialogHelper.openDirectory(primaryStage));
 		quit.setOnAction(e -> System.exit(0));
+		about.setOnMouseClicked(e -> new AboutDialog(primaryStage).showAndWait());
+		Menu aboutMenu = new Menu();
+		aboutMenu.setGraphic(about);
+
 	}
 }

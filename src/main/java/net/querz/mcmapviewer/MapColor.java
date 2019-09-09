@@ -1,5 +1,7 @@
 package net.querz.mcmapviewer;
 
+import javafx.scene.paint.Color;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,13 +64,14 @@ public enum MapColor {
 	private int color;
 
 	private static Map<Integer, Integer> colors = new HashMap<>();
+	private static Map<Integer, Color> javaFXColors = new HashMap<>();
 
 	private static final int[] mul = new int[]{180, 220, 255, 235};
 
 	static {
 		for (MapColor mc : MapColor.values()) {
 			//TODO: make this smaller
-			int a = mc.color >> 24;
+			int a = mc.color >> 24 & 0xFF;
 			int r = mc.color >> 16 & 0xFF;
 			int g = mc.color >> 8 & 0xFF;
 			int b = mc.color & 0xFF;
@@ -84,6 +87,7 @@ public enum MapColor {
 				newC |= newB;
 
 				colors.put(newId, newC);
+				javaFXColors.put(newId, new Color((float) newR / 255f, (float) newG / 255f, (float) newB / 255f, (float) a / 255f));
 			}
 		}
 	}
@@ -95,5 +99,9 @@ public enum MapColor {
 
 	public static int getColor(int id) {
 		return colors.getOrDefault(id, 0x00000000);
+	}
+
+	public static Color getJavaFXColor(int id) {
+		return javaFXColors.getOrDefault(id, Color.TRANSPARENT);
 	}
 }

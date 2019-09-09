@@ -13,7 +13,7 @@ public class Window extends Application {
 	* | File | About |										|
 	* -------------------------------------------------------
 	* map_0		|^|											|
-	* map_1		| |											|
+	* map_1 *	| |											|
 	* map_2		| |											|
 	* ...		| |											|
 	* 			| |											|
@@ -30,11 +30,10 @@ public class Window extends Application {
 	* 			| |											|
 	* 			|v|											|
 	* -------------------------------------------------------
-	* ID: 		|______|	Scale:		  		|______|v|	|
-	* X-Center:	|______|	Dimension:	  		|______|v|	|
-	* Z-Center:	|______|	Tracking Position:	|x|			|
-	* 						Unlimited Tracking: |x|			|
-	* 						Locked:				|x|			|
+	* X-Center:	 |______|	Tracking Position:	|x|			|
+	* Z-Center:	 |______|	Unlimited Tracking: |x|			|
+	* Scale:	 |______|v|	Locked:				|x|			|
+	* Dimension: |______|v|									|
 	* -------------------------------------------------------
 	* */
 
@@ -44,7 +43,9 @@ public class Window extends Application {
 
 		primaryStage.setTitle("MCMapViewer");
 		BorderPane pane = new BorderPane();
+		pane.setTop(new OptionBar(primaryStage));
 		pane.setCenter(mv);
+		pane.setBottom(new InfoPanel(mv));
 
 		Scene scene = new Scene(pane, mv.getWidth() * mv.getScaleX(), mv.getHeight() * mv.getScaleY());
 		primaryStage.setOnCloseRequest(e -> System.exit(0));
