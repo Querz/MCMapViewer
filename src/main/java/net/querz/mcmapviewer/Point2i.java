@@ -119,6 +119,14 @@ public class Point2i implements Cloneable {
 		return new Point2i(x << i, z << i);
 	}
 
+	public Point3i toPoint3i(int y) {
+		return new Point3i(x, y, z);
+	}
+
+	public Point3i toPoint3i() {
+		return new Point3i(x, 0, z);
+	}
+
 	@Override
 	public boolean equals(Object other) {
 		return other instanceof Point2i

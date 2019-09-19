@@ -136,6 +136,10 @@ public class Point3i implements Cloneable {
 		return new Point3i(this.x << x, this.y << y, this.z << z);
 	}
 
+	public Point2i toPoint2i() {
+		return new Point2i(x, z);
+	}
+
 	@Override
 	public boolean equals(Object other) {
 		return other instanceof Point3i
@@ -162,29 +166,5 @@ public class Point3i implements Cloneable {
 			e.printStackTrace();
 		}
 		return null;
-	}
-
-	public Point3i blockToRegion() {
-		return shiftRight(9, 0, 9);
-	}
-
-	public Point3i regionToBlock() {
-		return shiftLeft(9, 0, 9);
-	}
-
-	public Point3i regionToChunk() {
-		return shiftLeft(5, 0, 5);
-	}
-
-	public Point3i blockToChunk() {
-		return shiftRight(4, 0, 4);
-	}
-
-	public Point3i chunkToBlock() {
-		return shiftLeft(4, 0, 4);
-	}
-
-	public Point3i chunkToRegion() {
-		return shiftRight(5, 0, 5);
 	}
 }

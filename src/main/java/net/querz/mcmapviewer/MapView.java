@@ -14,7 +14,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
-import javafx.scene.image.PixelWriter;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -39,11 +38,12 @@ public class MapView extends StackPane {
 
 	private Canvas background;
 	private Canvas canvas;
-	private GraphicsContext context;
-	private Pane bannerOverlay;
+	private Pane overlay;
 
 	private File mapFile;
 	private byte[] imageData;
+
+	private static Image backgroundImage = FileHelper.getIconFromResources("map_background");
 
 	private IntegerProperty xCenter = new SimpleIntegerProperty();
 	private IntegerProperty zCenter = new SimpleIntegerProperty();
@@ -58,48 +58,49 @@ public class MapView extends StackPane {
 
 	public static final Color BANNER_TEXT_BACKGROUND = new Color(0.5019608f, 0.5019608f, 0.5019608f, 0.8f);
 
-
 	public MapView(File mapFile) {
-		background = new Canvas(IMAGE_WIDTH, IMAGE_HEIGHT);
-		background.setScaleX(SCALE * 2);
-		background.setScaleY(SCALE * 2);
-		background.setTranslateX(IMAGE_WIDTH * SCALE / 2.0);
-		background.setTranslateY(IMAGE_HEIGHT * SCALE / 2.0);
-		canvas = new Canvas(IMAGE_WIDTH, IMAGE_HEIGHT);
-		canvas.setScaleX(SCALE);
-		canvas.setScaleY(SCALE);
-		bannerOverlay = new Pane();
-		bannerOverlay.setMinWidth(IMAGE_WIDTH * SCALE);
-		bannerOverlay.setMinHeight(IMAGE_HEIGHT * SCALE);
+		// background must be 3 pixels larger on all sides
+		background = new Canvas(IMAGE_WIDTH * SCALE + 6 * SCALE * 2, IMAGE_HEIGHT * SCALE + 6 * SCALE * 2);
+
+		canvas = new Canvas(IMAGE_WIDTH * SCALE, IMAGE_HEIGHT * SCALE);
+
+		overlay = new Pane();
+		overlay.setMinWidth(IMAGE_WIDTH * SCALE);
+		overlay.setMinHeight(IMAGE_HEIGHT * SCALE);
+
+		Group overlayGroup = new Group();
+		overlayGroup.getChildren().add(overlay);
+		getChildren().addAll(background, canvas, overlayGroup);
+
+		updateBackground();
+
+		loadMapFile(mapFile);
+	}
+
+	public void loadMapFile(File mapFile) {
 		this.mapFile = mapFile;
-		context = canvas.getGraphicsContext2D();
+		clear();
 		try {
 			readFile();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		update();
+	}
 
-		Group overlayGroup = new Group();
-		overlayGroup.getChildren().add(bannerOverlay);
-		getChildren().addAll(background, canvas, overlayGroup);
-
-		Image image = FileHelper.getIconFromResources("map_background");
-		GraphicsContext backgroundContext = background.getGraphicsContext2D();
-		PixelReader pr = image.getPixelReader();
-		PixelWriter pw = backgroundContext.getPixelWriter();
-		for (int x = 0; x < image.getWidth(); x++) {
-			for (int y = 0; y < image.getHeight(); y++) {
-				Color color = pr.getColor(x, y);
-				if (color.isOpaque()) {
-					pw.setColor(x, y, color);
-				}
-			}
-		}
-//		backgroundContext.drawImage(image, 0, 0);
-
-//		update();
-
-		scale.addListener(s -> System.out.println("scale changed to " + s));
+	private void clear() {
+		imageData = null;
+		xCenter.setValue(0);
+		zCenter.setValue(0);
+		scale.setValue(Scale.SCALE_0);
+		dimension.setValue(Dimension.OVERWORLD);
+		trackingPosition.setValue(false);
+		unlimitedTracking.setValue(false);
+		locked.setValue(false);
+		banners.clear();
+		frames.clear();
+		root = null;
+		canvas.getGraphicsContext2D().clearRect(0, 0, IMAGE_WIDTH * SCALE, IMAGE_HEIGHT * SCALE);
 	}
 
 	private void readFile() throws IOException {
@@ -159,17 +160,14 @@ public class MapView extends StackPane {
 	}
 
 	public void update() {
-
-		long start = System.currentTimeMillis();
-
-		// set background
-		context.clearRect(0, 0, getWidth(), getHeight());
-		PixelWriter pw = context.getPixelWriter();
-
+		// manually draw pixels as rectangles to avoid antialiasing
+		GraphicsContext context = canvas.getGraphicsContext2D();
+		context.clearRect(0, 0, IMAGE_WIDTH * SCALE, IMAGE_HEIGHT * SCALE);
 		for (int i = 0; i < imageData.length; i++) {
 			int x = i % IMAGE_WIDTH;
 			int y = (i - x) / IMAGE_WIDTH;
-			pw.setArgb(x, y, MapColor.getColor(imageData[i] & 0xFF));
+			context.setFill(MapColor.getJavaFXColor(imageData[i] & 0xFF));
+			context.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
 		}
 
 		for (BannerData banner : banners) {
@@ -179,7 +177,7 @@ public class MapView extends StackPane {
 			label.setVisible(false);
 			label.setTextFill(Color.WHITE);
 			label.setBackground(new Background(new BackgroundFill(BANNER_TEXT_BACKGROUND, new CornerRadii(0), new Insets(0))));
-			bannerOverlay.getChildren().add(label);
+			overlay.getChildren().add(label);
 
 			// run this later once we have a height and a width
 			Platform.runLater(() -> {
@@ -205,6 +203,22 @@ public class MapView extends StackPane {
 
 				label.setVisible(true);
 			});
+		}
+	}
+
+	public void updateBackground() {
+		GraphicsContext backgroundContext = background.getGraphicsContext2D();
+		PixelReader pr = backgroundImage.getPixelReader();
+		double bgSize = 6.0 / 64 * SCALE * 2 + SCALE * 2;
+		// manually draw pixels as rectangles to avoid antialiasing
+		for (int x = 0; x < 64; x++) {
+			for (int y = 0; y < 64; y++) {
+				Color color = pr.getColor(x, y);
+				if (color.isOpaque()) {
+					backgroundContext.setFill(color);
+					backgroundContext.fillRect(x * bgSize, y * bgSize, Math.ceil(bgSize), Math.ceil(bgSize));
+				}
+			}
 		}
 	}
 
