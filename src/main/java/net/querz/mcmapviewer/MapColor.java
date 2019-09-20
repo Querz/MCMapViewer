@@ -1,7 +1,6 @@
 package net.querz.mcmapviewer;
 
 import javafx.scene.paint.Color;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -88,6 +87,8 @@ public enum MapColor {
 
 				colors.put(newId, newC);
 				javaFXColors.put(newId, new Color((float) newR / 255f, (float) newG / 255f, (float) newB / 255f, (float) a / 255f));
+
+				System.out.println(newR + " / " + newG + " / " + newB);
 			}
 		}
 	}
@@ -103,5 +104,35 @@ public enum MapColor {
 
 	public static Color getJavaFXColor(int id) {
 		return javaFXColors.getOrDefault(id, Color.TRANSPARENT);
+	}
+
+	public static int findClosestColor(int color) {
+		int r = color >> 16 & 0xFF;
+		int g = color >> 8 & 0xFF;
+		int b = color & 0xFF;
+
+		int closest = 0x00000000;
+		int closestDist = Integer.MAX_VALUE;
+
+		for(int i : colors.values()) {
+			int mr = i >> 16 & 0xFF;
+			int mg = i >> 8 & 0xFF;
+			int mb = i & 0xFF;
+
+			int dr = Math.abs(mr - r);
+			int dg = Math.abs(mg - g);
+			int db = Math.abs(mb - b);
+
+			int dist = dr + dg + db;
+
+			if (dist < closestDist) {
+				if (dist == 0) {
+					return i;
+				}
+				closestDist = dist;
+				closest = i;
+			}
+		}
+		return closest;
 	}
 }

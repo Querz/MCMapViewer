@@ -8,12 +8,13 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
-import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -40,6 +41,7 @@ public class MapView extends StackPane {
 	private Canvas canvas;
 	private Pane overlay;
 
+	private CompoundTag root;
 	private File mapFile;
 	private byte[] imageData;
 
@@ -52,11 +54,10 @@ public class MapView extends StackPane {
 	private BooleanProperty trackingPosition = new SimpleBooleanProperty();
 	private BooleanProperty unlimitedTracking = new SimpleBooleanProperty();
 	private BooleanProperty locked = new SimpleBooleanProperty();
-	private List<BannerData> banners = new ArrayList<>();
+	private List<MapIconData> banners = new ArrayList<>();
 	private List<FrameData> frames = new ArrayList<>();
-	private CompoundTag root;
 
-	public static final Color BANNER_TEXT_BACKGROUND = new Color(0.5019608f, 0.5019608f, 0.5019608f, 0.8f);
+	public static final Color BANNER_TEXT_BACKGROUND = new Color(0.1f, 0.1f, 0.1f, 0.8f);
 
 	public MapView(File mapFile) {
 		// background must be 3 pixels larger on all sides
@@ -65,16 +66,67 @@ public class MapView extends StackPane {
 		canvas = new Canvas(IMAGE_WIDTH * SCALE, IMAGE_HEIGHT * SCALE);
 
 		overlay = new Pane();
-		overlay.setMinWidth(IMAGE_WIDTH * SCALE);
-		overlay.setMinHeight(IMAGE_HEIGHT * SCALE);
+		overlay.setMinWidth(IMAGE_WIDTH * SCALE + 6 * SCALE * 2);
+		overlay.setMinHeight(IMAGE_HEIGHT * SCALE + 6 * SCALE * 2);
 
-		Group overlayGroup = new Group();
-		overlayGroup.getChildren().add(overlay);
-		getChildren().addAll(background, canvas, overlayGroup);
+		overlay.setOnMouseClicked(this::onMouseClicked);
+
+		getChildren().addAll(background, canvas, overlay);
 
 		updateBackground();
 
 		loadMapFile(mapFile);
+	}
+
+	private void onMouseClicked(MouseEvent e) {
+		if (e.getButton() != MouseButton.PRIMARY) {
+			return;
+		}
+
+		Point2i worldPos = getPosInWorld(e.getX(), e.getY());
+		if (worldPos == null) {
+			return;
+		}
+
+		System.out.println("worldPos: " + worldPos);
+
+		if (e.getTarget() instanceof MapIconView) {
+			// clicked an icon
+			// TODO: open context menu to edit icon
+			System.out.println("clicked icon: " + ((MapIconView) e.getTarget()).getData().getColor() + " / " + ((MapIconView) e.getTarget()).getData().getName() + " / " + ((MapIconView) e.getTarget()).getData().getPos());
+
+			Point2i imgPos = getPosOnImg(e.getX(), e.getY());
+
+			//TODO: when clicking the icon, make a temporary combobox appear where you can select
+			//      the icon. when clicking the text, make a temporary textfield appear where you
+			//      can edit the text of the map icon.
+			// --> add combobox or textfield to overlay pane
+			// --> keep track of combobox or textfield and remove them if this event is
+			//     called again but it is not a click on the tracked combobox or textfield
+		}
+	}
+
+	private Point2i getPosOnImg(double mouseX, double mouseY) {
+		int imgX = (int) (mouseX - 3 * SCALE * 2) / SCALE; // skip 3 pixels of background image
+		int imgY = (int) (mouseY - 3 * SCALE * 2) / SCALE;
+		if (imgX < 0 || imgX > IMAGE_WIDTH || imgY < 0 || imgY > IMAGE_HEIGHT) {
+			return null;
+		}
+		return new Point2i(imgX, imgY);
+	}
+
+	private Point2i getPosInWorld(double mouseX, double mouseY) {
+		Point2i imgPos = getPosOnImg(mouseX, mouseY);
+		if (imgPos == null) {
+			return null;
+		}
+		Point2i mapPos = new Point2i(
+				imgPos.getX() * (int) (Math.pow(2, getScale().getId())),
+				imgPos.getY() * (int) (Math.pow(2, getScale().getId())));
+		return mapPos
+				.add(getxCenter(), getzCenter())
+				.sub((int) (IMAGE_WIDTH * Math.pow(2, getScale().getId())) / 2,
+					 (int) (IMAGE_HEIGHT * Math.pow(2, getScale().getId())) / 2);
 	}
 
 	public void loadMapFile(File mapFile) {
@@ -119,8 +171,8 @@ public class MapView extends StackPane {
 		ListTag<CompoundTag> banners = catchClassCastException(() -> data.getListTag("banners").asCompoundTagList());
 		if (banners != null) {
 			for (CompoundTag banner : banners) {
-				BannerData bannerData = new BannerData(banner.getString("Name"), banner.getString("Color"), parsePos(banner.getCompoundTag("Pos")));
-				this.banners.add(bannerData);
+				MapIconData mapIconData = new MapIconData(banner.getString("Name"), banner.getString("Color"), parsePos(banner.getCompoundTag("Pos")));
+				this.banners.add(mapIconData);
 			}
 		}
 
@@ -170,40 +222,76 @@ public class MapView extends StackPane {
 			context.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
 		}
 
-		for (BannerData banner : banners) {
-			Point3i pos = banner.getPos().mod(IMAGE_WIDTH, Integer.MAX_VALUE, IMAGE_HEIGHT);
+		List<Runnable> postUpdates = new ArrayList<>();
+
+		for (MapIconData banner : banners) {
+
+			double mapWidthInBlocks = IMAGE_WIDTH * Math.pow(2, scale.getValue().getId());
+			double mapHeightInBlocks = IMAGE_HEIGHT * Math.pow(2, scale.getValue().getId());
+
+			Point2i pos = banner.getPos().toPoint2i()
+					.sub(xCenter.getValue(), zCenter.getValue()) // normalize banner position
+					.add((int) (mapWidthInBlocks / 2), (int) (mapHeightInBlocks / 2)) // adjust to zero of image
+					.mul(SCALE); // scale to image
+
+
 			Label label = new Label(banner.getName());
 			// do not display label until we know its height and width
 			label.setVisible(false);
 			label.setTextFill(Color.WHITE);
 			label.setBackground(new Background(new BackgroundFill(BANNER_TEXT_BACKGROUND, new CornerRadii(0), new Insets(0))));
-			overlay.getChildren().add(label);
+			label.setPadding(new Insets(0, 1, 0, 1));
 
-			// run this later once we have a height and a width
-			Platform.runLater(() -> {
-				double xOffset = pos.getX() * SCALE - label.getWidth() / 2.0;
-				double zOffset = pos.getZ() * SCALE - label.getHeight() / 2.0;
+			MapIconView icon = new MapIconView(new SimpleObjectProperty<>(banner));
+			icon.setVisible(false);
 
-				// the label should always appear inside of the map
-				if (xOffset < 0) {
-					xOffset = 0;
+			overlay.getChildren().addAll(icon, label);
+
+			postUpdates.add(() -> {
+				// center on icon in box
+				Point2i iconPos = pos.sub((int) icon.getWidth() / 2, (int) icon.getHeight() / 2);
+
+				if (iconPos.getX() + icon.getWidth() / 2 < 0) {
+					iconPos.setX((int) -(icon.getWidth() / 2));
+				} else if (iconPos.getX() > IMAGE_WIDTH * SCALE - icon.getWidth() / 2) {
+					iconPos.setX((int) (IMAGE_WIDTH * SCALE - icon.getWidth() / 2));
 				}
-				if (xOffset > IMAGE_WIDTH * SCALE - label.getWidth() / 2.0) {
-					xOffset = IMAGE_WIDTH * SCALE - label.getWidth() / 2.0;
-				}
-				if (zOffset < 0) {
-					zOffset = 0;
-				}
-				if (zOffset > IMAGE_HEIGHT * SCALE - label.getHeight() / 2.0) {
-					zOffset = IMAGE_HEIGHT * SCALE - label.getHeight() / 2.0;
+				if (iconPos.getY() + icon.getHeight() / 2 < 0) {
+					iconPos.setY((int) -(icon.getHeight() / 2));
+				} else if (iconPos.getY() > IMAGE_HEIGHT * SCALE - icon.getHeight() / 2) {
+					iconPos.setY((int) (IMAGE_HEIGHT * SCALE - icon.getHeight() / 2));
 				}
 
-				label.setTranslateX(xOffset);
-				label.setTranslateY(zOffset);
+				iconPos = iconPos.add(6 * SCALE);
 
+				icon.setTranslateX(iconPos.getX());
+				icon.setTranslateY(iconPos.getY());
+
+				icon.setVisible(true);
+
+				Point2i labelPos = pos.sub((int) label.getWidth() / 2, (int) -(icon.getHeight() / 2));
+
+				labelPos = labelPos.add(6 * SCALE);
+
+				if (labelPos.getX() < 0) {
+					labelPos.setX(0);
+				} else if (labelPos.getX() > overlay.getWidth() - label.getWidth()) {
+					labelPos.setX((int) (overlay.getWidth() - label.getWidth()));
+				}
+				if (labelPos.getY() < 0) {
+					labelPos.setY(0);
+				} else if (labelPos.getY() > overlay.getHeight() - label.getHeight()) {
+					labelPos.setY((int) (overlay.getHeight() - label.getHeight()));
+				}
+
+				label.setTranslateX(labelPos.getX());
+				label.setTranslateY(labelPos.getY());
 				label.setVisible(true);
 			});
 		}
+
+		// run this later once we have height and width of the label and icon
+		Platform.runLater(() -> postUpdates.forEach(Runnable::run));
 	}
 
 	public void updateBackground() {

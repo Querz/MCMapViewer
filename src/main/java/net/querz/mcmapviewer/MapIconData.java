@@ -6,10 +6,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class BannerData {
+public class MapIconData {
 
 	private String name;
-	private BannerColor color;
+	private MapIcon color;
 	private Point3i pos;
 
 	private static ScriptEngine engine;
@@ -19,13 +19,13 @@ public class BannerData {
 		engine = scriptEngineManager.getEngineByName("javascript");
 	}
 
-	public BannerData(String name, String color, Point3i pos) {
+	public MapIconData(String name, String color, Point3i pos) {
 		try {
 			this.name = parseJson(name);
 		} catch (Exception e) {
 			this.name = name;
 		}
-		this.color = BannerColor.byName(color);
+		this.color = MapIcon.byName(color);
 		this.pos = pos;
 	}
 
@@ -37,11 +37,11 @@ public class BannerData {
 		this.name = name;
 	}
 
-	public BannerColor getColor() {
+	public MapIcon getColor() {
 		return color;
 	}
 
-	public void setColor(BannerColor color) {
+	public void setColor(MapIcon color) {
 		this.color = color;
 	}
 
