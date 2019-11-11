@@ -167,4 +167,9 @@ public class Point3i implements Cloneable {
 		}
 		return null;
 	}
+
+	public Point3i print() {
+		System.out.print(this);
+		return this;
+	}
 }

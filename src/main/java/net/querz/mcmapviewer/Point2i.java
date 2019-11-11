@@ -177,4 +177,9 @@ public class Point2i implements Cloneable {
 	public Point2i chunkToRegion() {
 		return shiftRight(5);
 	}
+
+	public Point2i print() {
+		System.out.print(this);
+		return this;
+	}
 }

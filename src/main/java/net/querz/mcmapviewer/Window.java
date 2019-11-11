@@ -5,6 +5,7 @@ import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 
 public class Window extends Application {
@@ -64,7 +65,14 @@ public class Window extends Application {
 			scene.getStylesheets().add(styleSheet);
 		}
 
-		primaryStage.setOnCloseRequest(e -> System.exit(0));
+		primaryStage.setOnCloseRequest(e -> {
+			try {
+				mv.writeFile();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			System.exit(0);
+		});
 		primaryStage.setScene(scene);
 		primaryStage.show();
 	}

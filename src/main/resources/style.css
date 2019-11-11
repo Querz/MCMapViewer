@@ -13,3 +13,147 @@
 	-fx-background-color: rgba(255, 255, 255, 0.0);
 	-fx-background-insets: 10;
 }
+
+.text-field {
+	-fx-background-color: #4d4d4d;
+}
+
+.map-view {
+	-fx-background-color: #262626;
+}
+
+.map-view .text-field {
+	-fx-background-color: rgba(26, 26, 26, 0.8);
+}
+
+/* basic menu background color */
+.menu-bar, .menu, .menu-item, .context-menu {
+	-fx-background-color: #3c3f41;
+}
+
+/* menu paddings */
+.menu-bar {
+	-fx-padding: 0;
+}
+
+.menu {
+	-fx-padding: 2 5 2 5;
+}
+
+.menu .context-menu {
+	-fx-padding: 1;
+}
+
+/* menu text color and check-menu icon */
+.menu .label, .menu-item >.label, .check-menu-item {
+	-fx-text-fill: #f2f2f2;
+	-fx-focused-mark-color: #f2f2f2;
+	-fx-mark-color: #f2f2f2;
+}
+
+/* menu hovering */
+.menu:hover, .menu-item:hover, .check-menu-item:hover {
+	-fx-background-color: #494d50;
+}
+
+
+
+
+
+
+/*---------- BUTTON ----------*/
+
+.button {
+	-fx-background-color: #4c5052;
+	-fx-border-color: #5e6060;
+	-fx-text-fill: #acbbbb;
+	-fx-border-width: 1;
+	-fx-border-radius: 1;
+	-fx-background-radius: 1;
+	-fx-pref-height: 22px;
+	-fx-max-height: 22px;
+	-fx-padding: 0;
+}
+
+.button:hover {
+	-fx-background-color: #565a5d;
+	-fx-border-color: #656767;
+	-fx-text-fill: #b9c6c6;
+}
+
+.button:focused {
+	-fx-effect: dropshadow(gaussian, #00bfff, 4, 0, 0, 0);
+}
+
+.button-base:disabled {
+	-fx-background-color: #3c3f41;
+	-fx-text-fill: #acbbbb;
+}
+
+/*---------- DIALOG ----------*/
+
+.dialog-pane {
+	-fx-background-color: #3c3f41
+}
+
+.dialog-pane:header .header-panel {
+	-fx-background-color: #494d50;
+}
+
+.dialog-pane .label {
+	-fx-text-fill: #f2f2f2;
+}
+
+.dialog-pane:header .header-panel .label {
+	-fx-background-color: #494d50;
+	-fx-text-fill: #f2f2f2;
+}
+
+.dialog-pane > .button-bar > .container {
+	-fx-background-color: #3c3f41;
+}
+
+.dialog-pane > .content.label {
+	-fx-background-color: #3c3f41;
+	-fx-text-fill: #f2f2f2;
+}
+
+.dialog-pane .separator {
+	-fx-padding: 10 0 10 0;
+}
+
+.dialog-pane .separator *.line {
+	-fx-background-color: #515151;
+}
+
+/*---------- ABOUT DIALOG ----------*/
+
+.about-dialog-pane {
+	-fx-min-width: 350px;
+}
+
+.about-dialog-pane .about-dialog-grid-pane .label {
+	-fx-label-padding: 8 15 8 0;
+}
+
+.about-dialog-pane .about-dialog-grid-pane .hyperlink {
+	-fx-padding: 8 15 8 -8;
+	-fx-border-color: transparent;
+	-fx-border-width: 0;
+}
+
+.about-dialog-pane .about-dialog-grid-pane .hyperlink-update {
+	-fx-padding: 8 15 8 0;
+}
+
+.about-dialog-pane .about-dialog-grid-pane .hyperlink:visited  {
+	-fx-text-fill: #f2f2f2;
+}
+
+.about-dialog-pane .about-dialog-grid-pane .hyperlink .label {
+	-fx-padding: 0;
+}
+
+.about-dialog-pane .about-dialog-grid-pane .label-hint {
+	-fx-padding: 0 0 0 15;
+}

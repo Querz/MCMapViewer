@@ -11,16 +11,31 @@ import javafx.geometry.Insets;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
+import javafx.scene.image.WritableImage;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.BorderStrokeStyle;
+import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.ListTag;
 import net.querz.nbt.NBTUtil;
@@ -33,7 +48,7 @@ import java.util.function.Supplier;
 
 public class MapView extends StackPane {
 
-	public static final int SCALE = 4;
+	public static final int SCALE = 3;
 	public static final int IMAGE_WIDTH = 128;
 	public static final int IMAGE_HEIGHT = 128;
 
@@ -57,9 +72,15 @@ public class MapView extends StackPane {
 	private List<MapIconData> banners = new ArrayList<>();
 	private List<FrameData> frames = new ArrayList<>();
 
+	private MapIconView draggedIcon;
+	private Point2i draggedOffsetOnIcon;
+	private static final DataFormat ICON_DATA_FORMAT = new DataFormat("mcmap-icon");
+
 	public static final Color BANNER_TEXT_BACKGROUND = new Color(0.1f, 0.1f, 0.1f, 0.8f);
 
 	public MapView(File mapFile) {
+		getStyleClass().add("map-view");
+
 		// background must be 3 pixels larger on all sides
 		background = new Canvas(IMAGE_WIDTH * SCALE + 6 * SCALE * 2, IMAGE_HEIGHT * SCALE + 6 * SCALE * 2);
 
@@ -68,8 +89,16 @@ public class MapView extends StackPane {
 		overlay = new Pane();
 		overlay.setMinWidth(IMAGE_WIDTH * SCALE + 6 * SCALE * 2);
 		overlay.setMinHeight(IMAGE_HEIGHT * SCALE + 6 * SCALE * 2);
+		overlay.setMaxWidth(IMAGE_WIDTH * SCALE + 6 * SCALE * 2);
+		overlay.setMaxHeight(IMAGE_HEIGHT * SCALE + 6 * SCALE * 2);
 
 		overlay.setOnMouseClicked(this::onMouseClicked);
+		overlay.setOnDragDetected(this::onDragDetected);
+		overlay.setOnDragOver(this::onDragOver);
+		overlay.setOnDragDone(this::onDragDone);
+		overlay.setOnDragDropped(this::onDragDropped);
+
+//		overlay.setBackground(new Background(new BackgroundFill(new Color(1, 0, 0, 0.5), new CornerRadii(0), new Insets(0))));
 
 		getChildren().addAll(background, canvas, overlay);
 
@@ -78,32 +107,138 @@ public class MapView extends StackPane {
 		loadMapFile(mapFile);
 	}
 
-	private void onMouseClicked(MouseEvent e) {
+	private void onDragDetected(MouseEvent e) {
 		if (e.getButton() != MouseButton.PRIMARY) {
 			return;
 		}
+		System.out.println(e.getTarget().getClass());
 
-		Point2i worldPos = getPosInWorld(e.getX(), e.getY());
-		if (worldPos == null) {
+		if (e.getTarget() instanceof MapIconView) {
+			System.out.println("dragging icon");
+			draggedIcon = ((MapIconView) e.getTarget());
+			draggedOffsetOnIcon = new Point2i((int) (e.getX() - draggedIcon.getTranslateX()), (int) (e.getY() - draggedIcon.getTranslateY()));
+			System.out.println("d: " + draggedOffsetOnIcon);
+
+			Dragboard db = startDragAndDrop(TransferMode.MOVE);
+			db.setDragView(new WritableImage(1, 1));
+			ClipboardContent cbc = new ClipboardContent();
+			cbc.put(ICON_DATA_FORMAT, true);
+			db.setContent(cbc);
+			e.consume();
+		}
+	}
+
+	private void onDragOver(DragEvent e) {
+		if (e.getDragboard().hasContent(ICON_DATA_FORMAT)) {
+			e.acceptTransferModes(TransferMode.MOVE);
+			if (draggedIcon != null) {
+				Point2i pos = new Point2i((int) e.getX() - 6 * SCALE, (int) e.getY() - 6 * SCALE);
+				draggedIcon.translate(pos, new Point2i(IMAGE_WIDTH * SCALE, IMAGE_HEIGHT * SCALE), new Point2i(6 * SCALE, 6 * SCALE), SCALE);
+
+				Point2i world = getPosInWorld(e.getX(), e.getY());
+				System.out.println(world);
+				if (world != null) {
+					draggedIcon.getData().setPos(world.toPoint3i());
+				}
+			}
+		}
+	}
+
+	private void onDragDone(DragEvent e) {
+		System.out.println("drag done");
+		if (e.getDragboard().hasContent(ICON_DATA_FORMAT)) {
+			System.out.println("drag done really");
+			e.acceptTransferModes(TransferMode.MOVE);
+			draggedIcon = null;
+			draggedOffsetOnIcon = null;
+			e.consume();
+		}
+	}
+
+	private void onDragDropped(DragEvent e) {
+		System.out.println("drag dropped");
+		if (e.getDragboard().hasContent(ICON_DATA_FORMAT)) {
+			System.out.println("drag dropped really");
+			e.acceptTransferModes(TransferMode.MOVE);
+			draggedIcon = null;
+			draggedOffsetOnIcon = null;
+			e.consume();
+		}
+	}
+
+	private void onMouseClicked(MouseEvent e) {
+		System.out.println("click");
+
+		if (e.getButton() != MouseButton.SECONDARY) {
 			return;
 		}
 
-		System.out.println("worldPos: " + worldPos);
-
 		if (e.getTarget() instanceof MapIconView) {
 			// clicked an icon
-			// TODO: open context menu to edit icon
 			System.out.println("clicked icon: " + ((MapIconView) e.getTarget()).getData().getColor() + " / " + ((MapIconView) e.getTarget()).getData().getName() + " / " + ((MapIconView) e.getTarget()).getData().getPos());
 
-			Point2i imgPos = getPosOnImg(e.getX(), e.getY());
+			GridPane iconGrid = new GridPane();
+			int x = 0, y = 0;
+			for (MapIcon mapIcon : MapIcon.values()) {
+				if (!mapIcon.isBanner()) {
+					continue;
+				}
+				Label iconOption = new Label("", new ImageView(mapIcon.getIcon()));
+				iconOption.setOnMouseClicked(a -> {
+					((MapIconView) e.getTarget()).setIcon(mapIcon);
+					overlay.getChildren().remove(iconGrid);
+				});
+				iconGrid.add(iconOption, x, y);
+				x++;
+				if (x > 6) {
+					x = 0;
+					y++;
+				}
+			}
 
-			//TODO: when clicking the icon, make a temporary combobox appear where you can select
-			//      the icon. when clicking the text, make a temporary textfield appear where you
-			//      can edit the text of the map icon.
-			// --> add combobox or textfield to overlay pane
-			// --> keep track of combobox or textfield and remove them if this event is
-			//     called again but it is not a click on the tracked combobox or textfield
+			iconGrid.widthProperty().addListener((i, o, n) -> {
+				double translateX = e.getX() - n.doubleValue() / 2;
+				iconGrid.setTranslateX(translateX > 0 ? translateX : 0);
+			});
+			iconGrid.heightProperty().addListener((i, o, n) -> {
+				double translateY = e.getY() - n.doubleValue() / 2;
+				iconGrid.setTranslateY(translateY > 0 ? translateY : 0);
+			});
+			iconGrid.setBackground(new Background(new BackgroundFill(BANNER_TEXT_BACKGROUND, new CornerRadii(0), new Insets(0))));
+
+			overlay.getChildren().add(iconGrid);
+
+			iconGrid.setOnMouseExited(a -> Platform.runLater(() -> overlay.getChildren().remove(iconGrid)));
+
+		} else if (e.getTarget() instanceof Text && ((Text) e.getTarget()).getParent() instanceof MapLabelView || e.getTarget() instanceof  MapLabelView) {
+			MapLabelView parent = e.getTarget() instanceof MapLabelView ? (MapLabelView) e.getTarget() : (MapLabelView) ((Text) e.getTarget()).getParent();
+
+			TextField text = new TextField(parent.getData().getName());
+			text.setOnKeyReleased(k -> {
+				switch (k.getCode()) {
+					case ENTER:
+						parent.getData().setName(text.getText());
+						parent.update();
+					case ESCAPE:
+						overlay.getChildren().remove(text);
+				}
+			});
+			text.setMinSize(200, 0);
+			text.setTranslateX(parent.getTranslateX());
+			text.setTranslateY(parent.getTranslateY());
+			text.setPrefSize(parent.getWidth(), parent.getHeight());
+			text.setPadding(new Insets(0, 1, 0, 1));
+			text.setBackground(new Background(new BackgroundFill(BANNER_TEXT_BACKGROUND, new CornerRadii(0), new Insets(0))));
+			text.setFont(Font.font("Monospaced", 16));
+			text.setStyle("-fx-text-fill: white;");
+			text.setBorder(new Border(new BorderStroke(Color.WHITE, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(1))));
+			overlay.getChildren().add(text);
+			Platform.runLater(text::requestFocus);
+
+			text.widthProperty().addListener((i, o, n) -> parent.getIcon().translateLabel(text, parent.getIcon().getOffset(), text.getWidth(), text.getHeight()));
 		}
+
+		System.out.println(e.getTarget().getClass().getName());
 	}
 
 	private Point2i getPosOnImg(double mouseX, double mouseY) {
@@ -197,7 +332,7 @@ public class MapView extends StackPane {
 		}
 	}
 
-	private void writeFile() throws IOException {
+	public void writeFile() throws IOException {
 		CompoundTag data = root.getCompoundTag("data");
 		data.putBoolean("locked", locked.getValue());
 		data.putByte("scale", scale.getValue().getId());
@@ -207,6 +342,10 @@ public class MapView extends StackPane {
 		data.putInt("zCenter", zCenter.getValue());
 		data.putInt("dimension", dimension.getValue().getId());
 		data.putByteArray("colors", imageData);
+
+		ListTag<CompoundTag> icons = new ListTag<>(CompoundTag.class);
+		banners.forEach(b -> icons.add(b.toTag()));
+		data.put("banners", icons);
 
 		NBTUtil.writeTag(root, mapFile);
 	}
@@ -224,68 +363,35 @@ public class MapView extends StackPane {
 
 		List<Runnable> postUpdates = new ArrayList<>();
 
+		// calculate the location of the top-left corner of the map
+		Point2i nil = new Point2i(xCenter.getValue(), zCenter.getValue())
+				.sub(IMAGE_WIDTH * (int) Math.pow(2, scale.getValue().getId()) / 2, IMAGE_HEIGHT * (int) Math.pow(2, scale.getValue().getId()) / 2);
+
 		for (MapIconData banner : banners) {
 
-			double mapWidthInBlocks = IMAGE_WIDTH * Math.pow(2, scale.getValue().getId());
-			double mapHeightInBlocks = IMAGE_HEIGHT * Math.pow(2, scale.getValue().getId());
-
 			Point2i pos = banner.getPos().toPoint2i()
-					.sub(xCenter.getValue(), zCenter.getValue()) // normalize banner position
-					.add((int) (mapWidthInBlocks / 2), (int) (mapHeightInBlocks / 2)) // adjust to zero of image
-					.mul(SCALE); // scale to image
+					.sub(nil) // pos of banner on normalized map
+					.div((int) Math.pow(2, scale.getValue().getId())) // scale map to image
+					.mul(SCALE); // scale image to display
 
-
-			Label label = new Label(banner.getName());
+			MapLabelView label = new MapLabelView(new SimpleObjectProperty<>(banner));
 			// do not display label until we know its height and width
 			label.setVisible(false);
-			label.setTextFill(Color.WHITE);
+//			label.setTextFill(Color.WHITE);
 			label.setBackground(new Background(new BackgroundFill(BANNER_TEXT_BACKGROUND, new CornerRadii(0), new Insets(0))));
 			label.setPadding(new Insets(0, 1, 0, 1));
 
-			MapIconView icon = new MapIconView(new SimpleObjectProperty<>(banner));
+			MapIconView icon = new MapIconView(new SimpleObjectProperty<>(banner), label);
+			label.assignIcon(icon);
 			icon.setVisible(false);
 
 			overlay.getChildren().addAll(icon, label);
 
 			postUpdates.add(() -> {
 				// center on icon in box
-				Point2i iconPos = pos.sub((int) icon.getWidth() / 2, (int) icon.getHeight() / 2);
 
-				if (iconPos.getX() + icon.getWidth() / 2 < 0) {
-					iconPos.setX((int) -(icon.getWidth() / 2));
-				} else if (iconPos.getX() > IMAGE_WIDTH * SCALE - icon.getWidth() / 2) {
-					iconPos.setX((int) (IMAGE_WIDTH * SCALE - icon.getWidth() / 2));
-				}
-				if (iconPos.getY() + icon.getHeight() / 2 < 0) {
-					iconPos.setY((int) -(icon.getHeight() / 2));
-				} else if (iconPos.getY() > IMAGE_HEIGHT * SCALE - icon.getHeight() / 2) {
-					iconPos.setY((int) (IMAGE_HEIGHT * SCALE - icon.getHeight() / 2));
-				}
-
-				iconPos = iconPos.add(6 * SCALE);
-
-				icon.setTranslateX(iconPos.getX());
-				icon.setTranslateY(iconPos.getY());
-
+				icon.translate(pos, new Point2i(IMAGE_WIDTH * SCALE, IMAGE_HEIGHT * SCALE), new Point2i(6 * SCALE, 6 * SCALE), SCALE);
 				icon.setVisible(true);
-
-				Point2i labelPos = pos.sub((int) label.getWidth() / 2, (int) -(icon.getHeight() / 2));
-
-				labelPos = labelPos.add(6 * SCALE);
-
-				if (labelPos.getX() < 0) {
-					labelPos.setX(0);
-				} else if (labelPos.getX() > overlay.getWidth() - label.getWidth()) {
-					labelPos.setX((int) (overlay.getWidth() - label.getWidth()));
-				}
-				if (labelPos.getY() < 0) {
-					labelPos.setY(0);
-				} else if (labelPos.getY() > overlay.getHeight() - label.getHeight()) {
-					labelPos.setY((int) (overlay.getHeight() - label.getHeight()));
-				}
-
-				label.setTranslateX(labelPos.getX());
-				label.setTranslateY(labelPos.getY());
 				label.setVisible(true);
 			});
 		}
@@ -331,7 +437,9 @@ public class MapView extends StackPane {
 		int x = posTag.getInt("X");
 		int y = posTag.getInt("Y");
 		int z = posTag.getInt("Z");
-		return new Point3i(x, y, z);
+		Point3i pos = new Point3i(x, y, z);
+		System.out.println("parsed pos: " + pos);
+		return pos;
 	}
 
 	public Scale getScale() {
@@ -416,5 +524,9 @@ public class MapView extends StackPane {
 
 	public void setzCenter(int zCenter) {
 		this.zCenter.set(zCenter);
+	}
+
+	public void showMapIcons(boolean show) {
+		overlay.setVisible(show);
 	}
 }

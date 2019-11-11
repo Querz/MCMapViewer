@@ -27,5 +27,7 @@ public class OptionBar extends MenuBar {
 		Menu aboutMenu = new Menu();
 		aboutMenu.setGraphic(about);
 
+		getMenus().addAll(file, aboutMenu);
+
 	}
 }

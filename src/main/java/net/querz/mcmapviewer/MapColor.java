@@ -69,7 +69,6 @@ public enum MapColor {
 
 	static {
 		for (MapColor mc : MapColor.values()) {
-			//TODO: make this smaller
 			int a = mc.color >> 24 & 0xFF;
 			int r = mc.color >> 16 & 0xFF;
 			int g = mc.color >> 8 & 0xFF;
@@ -87,8 +86,6 @@ public enum MapColor {
 
 				colors.put(newId, newC);
 				javaFXColors.put(newId, new Color((float) newR / 255f, (float) newG / 255f, (float) newB / 255f, (float) a / 255f));
-
-				System.out.println(newR + " / " + newG + " / " + newB);
 			}
 		}
 	}
