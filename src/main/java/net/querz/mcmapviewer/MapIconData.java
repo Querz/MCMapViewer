@@ -1,14 +1,11 @@
 package net.querz.mcmapviewer;
 
 import javafx.scene.text.Text;
-import net.querz.nbt.CompoundTag;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import java.io.IOException;
+import net.querz.nbt.tag.CompoundTag;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class MapIconData {
 
@@ -16,13 +13,6 @@ public class MapIconData {
 	private List<Text> textElements;
 	private MapIcon color;
 	private Point3i pos;
-
-	private static ScriptEngine engine;
-
-	static {
-		ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
-		engine = scriptEngineManager.getEngineByName("javascript");
-	}
 
 	public MapIconData(String name, String color, Point3i pos) {
 		setName(name);
@@ -69,49 +59,39 @@ public class MapIconData {
 		this.pos = pos;
 	}
 
-	@SuppressWarnings("unchecked")
-	private List<Text> parseJson(String json) throws Exception {
-		String script = "Java.asJSONCompatible(" + json + ")";
-		Object result = engine.eval(script);
-		if (!(result instanceof Map)) {
-			throw new IOException("could not parse json");
-		}
+	private List<Text> parseJson(String json) {
+		JSONObject result = new JSONObject(json);
 
 		List<Text> textElements = new ArrayList<>();
 
-		Map<String, Object> map = (Map<String, Object>) result;
+		addTextElement(result, textElements);
 
-		addTextElement(map, textElements);
-
-		if (map.containsKey("extra")) {
-			parseExtra(map.get("extra"), textElements);
+		if (result.has("extra")) {
+			parseExtra(result.getJSONArray("extra"), textElements);
 		}
 
 		return textElements;
 	}
 
-	@SuppressWarnings("unchecked")
-	private void parseExtra(Object object, List<Text> textElements) {
-		for (Map<String, Object> entry : (List<Map<String, Object>>) object) {
-			addTextElement(entry, textElements);
-			if (entry.containsKey("extra")) {
-				parseExtra(entry.get("extra"), textElements);
+	private void parseExtra(JSONArray array, List<Text> textElements) {
+		for (Object entry : array) {
+			addTextElement((JSONObject) entry, textElements);
+			if (((JSONObject) entry).has("extra")) {
+				parseExtra(((JSONObject) entry).getJSONArray("extra"), textElements);
 			}
 		}
 	}
 
-	private void addTextElement(Map<String, Object> map, List<Text> textElements) {
+	private void addTextElement(JSONObject map, List<Text> textElements) {
 		String text = (String) map.get("text");
 		if (text == null) {
 			return;
 		}
-		String color = (String) map.getOrDefault("color", "");
-		boolean bold = (boolean) map.getOrDefault("bold", false);
-		boolean italic = (boolean) map.getOrDefault("italic", false);
-		boolean strikethrough = (boolean) map.getOrDefault("strikethrough", false);
-		boolean underline = (boolean) map.getOrDefault("underline", false);
-
-
+		String color = map.has("color") ? map.getString("color") : "";
+		boolean bold = map.has("bold") && map.getBoolean("bold");
+		boolean italic = map.has("italic") && map.getBoolean("italic");
+		boolean strikethrough = map.has("strikethrough") && map.getBoolean("strikethrough");
+		boolean underline = map.has("underline") && map.getBoolean("underline");
 
 		Text textELement = TextColor.createText(text, color, bold, italic, strikethrough, underline);
 		textElements.add(textELement);

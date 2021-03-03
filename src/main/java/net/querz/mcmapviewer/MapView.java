@@ -36,10 +36,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import net.querz.nbt.CompoundTag;
-import net.querz.nbt.ListTag;
-import net.querz.nbt.NBTUtil;
-import net.querz.nbt.Tag;
+import net.querz.nbt.io.NamedTag;
+import net.querz.nbt.tag.CompoundTag;
+import net.querz.nbt.tag.ListTag;
+import net.querz.nbt.io.NBTUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -291,12 +291,12 @@ public class MapView extends StackPane {
 	}
 
 	private void readFile() throws IOException {
-		Tag<?> tag = NBTUtil.readTag(mapFile);
-		if (!(tag instanceof CompoundTag)) {
+		NamedTag tag = NBTUtil.read(mapFile);
+		if (tag == null || !(tag.getTag() instanceof CompoundTag)) {
 			throw new IOException("expected root to be CompoundTag, got " + (tag == null ? "null" : tag.getClass().getSimpleName()));
 		}
 
-		root = (CompoundTag) tag;
+		root = (CompoundTag) tag.getTag();
 		System.out.println(root);
 		CompoundTag data = catchClassCastException(() -> root.getCompoundTag("data"));
 		if (data == null) {
@@ -347,7 +347,7 @@ public class MapView extends StackPane {
 		banners.forEach(b -> icons.add(b.toTag()));
 		data.put("banners", icons);
 
-		NBTUtil.writeTag(root, mapFile);
+		NBTUtil.write(root, mapFile);
 	}
 
 	public void update() {

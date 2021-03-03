@@ -79,7 +79,7 @@ public class AboutDialog extends Alert {
 
 		// needs to run in separate thread so we can see the "checking..." label
 		Thread lookup = new Thread(() -> {
-			VersionChecker checker = new VersionChecker("Querz", "mcaselector");
+			VersionChecker checker = new VersionChecker("Querz", "MCMapViewer");
 			try {
 				VersionChecker.VersionData version = checker.fetchLatestVersion();
 				if (version != null && version.isNewerThan(applicationVersion)) {

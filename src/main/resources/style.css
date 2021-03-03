@@ -14,10 +14,6 @@
 	-fx-background-insets: 10;
 }
 
-.text-field {
-	-fx-background-color: #4d4d4d;
-}
-
 .map-view {
 	-fx-background-color: #262626;
 }
@@ -56,10 +52,110 @@
 	-fx-background-color: #494d50;
 }
 
+/*---------- CHECKBOX ----------*/
 
+.check-box {
+	-fx-padding: 4 0 -3 0;
+	-fx-text-fill: #f2f2f2;
+}
 
+.check-box .box {
+	-fx-background-color: #43494a;
+	-fx-border-color: #6a6a6a;
+	-fx-border-radius: 2;
+	-fx-border-width: 2;
+	-fx-border-insets: 3;
+	-fx-background-insets: 3;
+}
 
+.check-box .box .mark {
+	-fx-padding: 5;
+	-fx-mark-color: #bbbbbb;
+}
 
+.combo-box {
+	-fx-pref-width: 110;
+}
+
+.grid {
+	-fx-background-color: #3c3f41;
+	-fx-hgap: 50;
+	-fx-padding: 0 0 5 5;
+}
+
+.grid .label {
+	-fx-text-fill: #f2f2f2;
+	-fx-pref-width: 110;
+	-fx-pref-height: 30;
+}
+
+.grid .text-field {
+	-fx-pref-width: 110;
+	-fx-alignment: center-left;
+	-fx-background-color: #45494a;
+	-fx-background-radius: 0;
+	-fx-border-width: 1;
+	-fx-border-color: #646464;
+	-fx-pref-height: 22;
+	-fx-max-height: 22;
+	-fx-min-width: 30;
+	-fx-padding: 0;
+	-fx-font-weight: bold;
+	-fx-text-fill: #f2f2f2;
+	-fx-alignment: center-right;
+}
+
+.grid .text-field:focused {
+	-fx-effect: dropshadow(gaussian, #00bfff, 4, 0, 0, 0);
+}
+
+.grid .combo-box {
+	-fx-background-color: #3c3f41;
+	-fx-background-radius: 0;
+	-fx-border-width: 1;
+	-fx-border-color: #646464;
+	-fx-pref-width: 110;
+	-fx-min-width: 70;
+	-fx-padding: 0;
+}
+
+.grid .combo-box:hover {
+	-fx-background-color: #494d50;
+	-fx-border-color: #666666;
+}
+
+.grid .combo-box:focused {
+	-fx-effect: dropshadow(gaussian, #00bfff, 4, 0, 0, 0);
+}
+
+.grid .combo-box-base .arrow-button {
+	-fx-border-width: 0 0 0 1;
+	-fx-border-color: #646464;
+	-fx-padding: 0 5 0 5;
+}
+
+.grid .combo-box-base .arrow-button .arrow {
+	-fx-background-color: #bbbbbb;
+}
+
+.grid .combo-box .list-cell {
+	-fx-text-fill: #f2f2f2;
+	-fx-padding: 2 5 2 5;
+}
+
+.grid .combo-box-popup .list-view {
+	-fx-padding: 0;
+	-fx-border-width: 0 1 1 1;
+	-fx-border-color: #020202;
+}
+
+.grid .combo-box-popup .list-cell:hover {
+	-fx-background-color: #494d50;
+}
+
+.grid .combo-box-popup .list-cell {
+	-fx-background-color: #3c3f41;
+}
 
 /*---------- BUTTON ----------*/
 

@@ -1,35 +1,29 @@
 package net.querz.mcmapviewer;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
+import org.json.JSONException;
+import org.json.JSONObject;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Map;
+import java.util.function.Supplier;
 
 public class VersionChecker {
 
 	private static final String endpointTemplate = "https://api.github.com/repos/%s/%s/releases/latest";
 
-	private ScriptEngine engine;
-
-	private String owner;
-	private String repository;
+	private final String owner;
+	private final String repository;
 
 	public VersionChecker(String owner, String repository) {
 		this.owner = owner;
 		this.repository = repository;
-		ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
-		engine = scriptEngineManager.getEngineByName("javascript");
 	}
 
 	public VersionData fetchLatestVersion() throws Exception {
 		String endpoint = String.format(endpointTemplate, owner, repository);
 		URL url = new URL(endpoint);
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-		connection.setRequestMethod("GET");
 
 		StringBuilder stringBuilder = new StringBuilder();
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
@@ -41,27 +35,23 @@ public class VersionChecker {
 		return parseJson(stringBuilder.toString());
 	}
 
-	// a dirty way to parse json without using any 3rd party dependency.
-	private VersionData parseJson(String json) throws Exception {
-		String script = "Java.asJSONCompatible(" + json + ")";
-		Object result = engine.eval(script);
-		if (!(result instanceof Map)) {
-			throw new IOException("could not parse json");
-		}
+	private VersionData parseJson(String json) throws JSONException {
+		JSONObject result = new JSONObject(json);
 
 		int latestID = 0;
 		String latestTag = null;
 		String latestLink = null;
+		boolean prerelease = false;
 
-		@SuppressWarnings("unchecked")
-		Map<String, Object> map = (Map<String, Object>) result;
-		for (Map.Entry<String, Object> e : map.entrySet()) {
-			if ("id".equals(e.getKey())) {
-				latestID = (int) e.getValue();
-			} else if ("tag_name".equals(e.getKey())) {
-				latestTag = (String) e.getValue();
-			} else if ("html_url".equals(e.getKey())) {
-				latestLink = (String) e.getValue();
+		for (String key : result.keySet()) {
+			if ("id".equals(key)) {
+				latestID = result.getInt("id");
+			} else if ("tag_name".equals(key)) {
+				latestTag = result.getString("tag_name");
+			} else if ("html_url".equals(key)) {
+				latestLink = result.getString("html_url");
+			} else if ("prerelease".equals(key)) {
+				prerelease = result.getBoolean("prerelease");
 			}
 		}
 
@@ -69,17 +59,19 @@ public class VersionChecker {
 			return null;
 		}
 
-		return new VersionData(latestID, latestTag, latestLink);
+		return new VersionData(latestID, latestTag, latestLink, prerelease);
 	}
 
-	public class VersionData {
-		int id;
-		String tag, link;
+	public static class VersionData {
+		private final int id;
+		private final String tag, link;
+		private final boolean prerelease;
 
-		VersionData(int id, String tag, String link) {
+		private VersionData(int id, String tag, String link, boolean prerelease) {
 			this.id = id;
 			this.tag = tag;
 			this.link = link;
+			this.prerelease = prerelease;
 		}
 
 		public boolean isNewerThan(VersionData version) {
@@ -91,11 +83,38 @@ public class VersionChecker {
 		}
 
 		public boolean isNewerThan(String tag) {
-			return this.tag.compareTo(tag) > 0;
+			return compare(this.tag, tag) > 0;
+		}
+
+		private int compare(String a, String b) {
+			String[] split = a.split("\\.");
+			String[] splitOther = b.split("\\.");
+			int length = Math.max(split.length, splitOther.length);
+
+			for (int i = 0; i < length; i++) {
+				String me = i < split.length ? split[i] : "0";
+				String you = i < splitOther.length ? splitOther[i] : "0";
+				int meInt = withDefault(() -> Integer.parseInt(me), 0);
+				int youInt = withDefault(() -> Integer.parseInt(you), 0);
+
+				int comp = Integer.compare(meInt, youInt);
+				if (comp != 0) {
+					return comp;
+				}
+			}
+			return 0;
+		}
+
+		private <T> T withDefault(Supplier<T> supplier, T def) {
+			try {
+				return supplier.get();
+			} catch (Exception ex) {
+				return def;
+			}
 		}
 
 		public boolean isOlderThan(String tag) {
-			return this.tag.compareTo(tag) < 0;
+			return compare(this.tag, tag) < 0;
 		}
 
 		public String getTag() {
@@ -106,9 +125,13 @@ public class VersionChecker {
 			return link;
 		}
 
+		public boolean isPrerelease() {
+			return prerelease;
+		}
+
 		@Override
 		public String toString() {
-			return "id=" + id + ", tag=" + tag + ", link=" + link;
+			return "id=" + id + ", tag=" + tag + ", link=" + link + ", prerelease=" + prerelease;
 		}
 	}
 }

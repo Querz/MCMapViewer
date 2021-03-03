@@ -1,6 +1,8 @@
 package net.querz.mcmapviewer;
 
 import javafx.beans.binding.Bindings;
+import javafx.geometry.Pos;
+import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -11,6 +13,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
+
+import java.text.NumberFormat;
 
 public class InfoPanel extends BorderPane {
 
@@ -44,27 +48,28 @@ public class InfoPanel extends BorderPane {
 	 * -------------------------------------------------------
 	 * */
 
-	private Label idLabel = new Label("ID:");
-	private Label xCenterLabel = new Label("X-Center:");
-	private Label zCenterLabel = new Label("Z-Center:");
-	private Label scaleLabel = new Label("Scale:");
-	private Label dimensionLabel = new Label("Dimension:");
-	private Label trackingPositionLabel = new Label("Tracking position:");
-	private Label unlimitedTrackingLabel = new Label("Unlimited tracking:");
-	private Label lockedLabel = new Label("Locked:");
+	private final Label idLabel = new Label("ID:");
+	private final Label xCenterLabel = new Label("X-Center:");
+	private final Label zCenterLabel = new Label("Z-Center:");
+	private final Label scaleLabel = new Label("Scale:");
+	private final Label dimensionLabel = new Label("Dimension:");
+	private final Label trackingPositionLabel = new Label("Tracking position:");
+	private final Label unlimitedTrackingLabel = new Label("Unlimited tracking:");
+	private final Label lockedLabel = new Label("Locked:");
 
-	private TextField idField = new TextField();
-	private TextField xCenterField = new TextField();
-	private TextField zCenterField = new TextField();
-	private ComboBox<Scale> scaleField = new ComboBox<>();
-	private ComboBox<Dimension> dimensionField = new ComboBox<>();
-	private CheckBox trackingPositionField = new CheckBox();
-	private CheckBox unlimitedTrackingField = new CheckBox();
-	private CheckBox lockedField = new CheckBox();
+	private final TextField idField = new TextField();
+	private final TextField xCenterField = new TextField();
+	private final TextField zCenterField = new TextField();
+	private final ComboBox<Scale> scaleField = new ComboBox<>();
+	private final ComboBox<Dimension> dimensionField = new ComboBox<>();
+	private final CheckBox trackingPositionField = new CheckBox();
+	private final CheckBox unlimitedTrackingField = new CheckBox();
+	private final CheckBox lockedField = new CheckBox();
 
 	public InfoPanel(MapView mapView) {
 		// arrange fields
 		GridPane grid = new GridPane();
+		grid.getStyleClass().add("grid");
 
 		grid.add(pair(xCenterLabel, xCenterField), 0, 0);
 		grid.add(pair(zCenterLabel, zCenterField), 0, 1);
@@ -81,7 +86,9 @@ public class InfoPanel extends BorderPane {
 		trackingPositionField.selectedProperty().bindBidirectional(mapView.trackingPositionProperty());
 		unlimitedTrackingField.selectedProperty().bindBidirectional(mapView.unlimitedTrackingProperty());
 		lockedField.selectedProperty().bindBidirectional(mapView.lockedProperty());
-		StringConverter<Number> converter = new NumberStringConverter();
+		NumberFormat format = NumberFormat.getIntegerInstance();
+		format.setGroupingUsed(false);
+		StringConverter<Number> converter = new NumberStringConverter(format);
 		Bindings.bindBidirectional(xCenterField.textProperty(), mapView.xCenterProperty(), converter);
 		Bindings.bindBidirectional(zCenterField.textProperty(), mapView.zCenterProperty(), converter);
 
@@ -90,6 +97,7 @@ public class InfoPanel extends BorderPane {
 
 	private HBox pair(Label label, Node value) {
 		HBox hBox = new HBox();
+		hBox.setAlignment(Pos.CENTER_LEFT);
 		hBox.getChildren().addAll(label, value);
 		return hBox;
 	}
