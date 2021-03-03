@@ -21,6 +21,12 @@ public class MapIconData {
 		this.pos = pos;
 	}
 
+	public MapIconData(String name, MapIcon color, Point3i pos) {
+		setName(name);
+		this.color = color;
+		this.pos = pos;
+	}
+
 	public List<Text> getTextElements() {
 		return textElements;
 	}

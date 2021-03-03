@@ -172,6 +172,10 @@ public class MapView extends StackPane {
 			return;
 		}
 
+		if (mapFile == null) {
+			return;
+		}
+
 		if (e.getTarget() instanceof MapIconView) {
 			// clicked an icon
 			System.out.println("clicked icon: " + ((MapIconView) e.getTarget()).getData().getColor() + " / " + ((MapIconView) e.getTarget()).getData().getName() + " / " + ((MapIconView) e.getTarget()).getData().getPos());
@@ -194,6 +198,15 @@ public class MapView extends StackPane {
 					y++;
 				}
 			}
+
+			Label iconOption = new Label("", new ImageView(MapIcon.RED_X.getIcon()));
+			iconOption.setOnMouseClicked(a -> {
+				banners.remove(((MapIconView) e.getTarget()).getData());
+				overlay.getChildren().remove(iconGrid);
+				overlay.getChildren().remove(((MapIconView) e.getTarget()).getMapLabelView());
+				overlay.getChildren().remove(e.getTarget());
+			});
+			iconGrid.add(iconOption, x, y);
 
 			iconGrid.widthProperty().addListener((i, o, n) -> {
 				double translateX = e.getX() - n.doubleValue() / 2;
@@ -235,6 +248,15 @@ public class MapView extends StackPane {
 			Platform.runLater(text::requestFocus);
 
 			text.widthProperty().addListener((i, o, n) -> parent.getIcon().translateLabel(text, parent.getIcon().getOffset(), text.getWidth(), text.getHeight()));
+		} else if (e.getTarget() == overlay) {
+			Point2i posInWorld = getPosInWorld(e.getX(), e.getY());
+			if (posInWorld == null) {
+				return;
+			}
+			// create new banner
+			MapIconData mapIconData = new MapIconData("Banner", MapIcon.BANNER_WHITE, posInWorld.toPoint3i());
+			this.banners.add(mapIconData);
+			update();
 		}
 
 		System.out.println(e.getTarget().getClass().getName());
@@ -350,6 +372,8 @@ public class MapView extends StackPane {
 	}
 
 	public void update() {
+		overlay.getChildren().clear();
+
 		// manually draw pixels as rectangles to avoid antialiasing
 		GraphicsContext context = canvas.getGraphicsContext2D();
 		context.clearRect(0, 0, IMAGE_WIDTH * SCALE, IMAGE_HEIGHT * SCALE);
@@ -376,7 +400,6 @@ public class MapView extends StackPane {
 			MapLabelView label = new MapLabelView(new SimpleObjectProperty<>(banner));
 			// do not display label until we know its height and width
 			label.setVisible(false);
-//			label.setTextFill(Color.WHITE);
 			label.setBackground(new Background(new BackgroundFill(BANNER_TEXT_BACKGROUND, new CornerRadii(0), new Insets(0))));
 			label.setPadding(new Insets(0, 1, 0, 1));
 

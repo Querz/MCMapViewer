@@ -11,6 +11,7 @@ public class FileView extends ListView<File> {
 	private File directory;
 	private File[] files;
 	private File selected;
+	private Consumer<File> onFileSelectionChanged;
 
 	public FileView() {
 		getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
@@ -33,9 +34,14 @@ public class FileView extends ListView<File> {
 		this.files = directory.listFiles((d, n) -> n.matches("map_[0-9]+\\.dat"));
 		getItems().clear();
 		getItems().addAll(files);
+		getSelectionModel().select(0);
+		if (onFileSelectionChanged != null) {
+			onFileSelectionChanged.accept(getSelectionModel().getSelectedItem());
+		}
 	}
 
 	public void setOnFileSelectionChanged(Consumer<File> consumer) {
+		onFileSelectionChanged = consumer;
 		setOnMousePressed(e -> {
 			if (getSelectionModel().getSelectedItem() != null && !getSelectionModel().getSelectedItem().equals(selected)) {
 				selected = getSelectionModel().getSelectedItem();
