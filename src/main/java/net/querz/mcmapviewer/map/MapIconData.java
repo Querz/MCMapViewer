@@ -1,6 +1,7 @@
-package net.querz.mcmapviewer;
+package net.querz.mcmapviewer.map;
 
 import javafx.scene.text.Text;
+import net.querz.mcmapviewer.point.Point3i;
 import net.querz.nbt.tag.CompoundTag;
 import org.json.JSONArray;
 import org.json.JSONObject;

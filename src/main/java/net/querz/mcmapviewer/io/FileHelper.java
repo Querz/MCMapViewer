@@ -1,16 +1,17 @@
-package net.querz.mcmapviewer;
+package net.querz.mcmapviewer.io;
 
 import javafx.scene.image.Image;
 import java.io.IOException;
 import java.net.JarURLConnection;
 import java.net.URL;
+import java.util.Objects;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 public class FileHelper {
 
 	public static Image getIconFromResources(String name) {
-		return new Image(FileHelper.class.getClassLoader().getResourceAsStream(name + ".png"));
+		return new Image(Objects.requireNonNull(FileHelper.class.getClassLoader().getResourceAsStream(name + ".png")));
 	}
 
 	public static Attributes getManifestAttributes() throws IOException {

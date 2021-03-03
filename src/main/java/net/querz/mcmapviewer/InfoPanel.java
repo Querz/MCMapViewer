@@ -2,7 +2,6 @@ package net.querz.mcmapviewer;
 
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Pos;
-import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -13,6 +12,9 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
+import net.querz.mcmapviewer.map.Dimension;
+import net.querz.mcmapviewer.map.MapView;
+import net.querz.mcmapviewer.map.Scale;
 
 import java.text.NumberFormat;
 

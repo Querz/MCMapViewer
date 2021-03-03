@@ -1,10 +1,11 @@
-package net.querz.mcmapviewer;
+package net.querz.mcmapviewer.map;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import net.querz.mcmapviewer.point.Point2i;
 
 public class MapIconView extends Label {
 

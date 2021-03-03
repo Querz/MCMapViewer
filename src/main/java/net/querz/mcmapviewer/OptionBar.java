@@ -16,12 +16,12 @@ public class OptionBar extends MenuBar {
 
 	private Label about = new Label("About");
 
-	public OptionBar(Stage primaryStage) {
+	public OptionBar(Stage primaryStage, FileView fileView) {
 		getStyleClass().add("option-bar");
 
 		file.getItems().addAll(open, new SeparatorMenuItem(), quit);
 
-		open.setOnAction(e -> DialogHelper.openDirectory(primaryStage));
+		open.setOnAction(e -> DialogHelper.openDirectory(primaryStage, fileView));
 		quit.setOnAction(e -> System.exit(0));
 		about.setOnMouseClicked(e -> new AboutDialog(primaryStage).showAndWait());
 		Menu aboutMenu = new Menu();

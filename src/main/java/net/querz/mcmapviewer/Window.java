@@ -2,9 +2,11 @@ package net.querz.mcmapviewer;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import java.io.File;
+import net.querz.mcmapviewer.map.MapView;
+
 import java.io.IOException;
 import java.net.URL;
 
@@ -48,13 +50,18 @@ public class Window extends Application {
 	* */
 
 	@Override
-	public void start(Stage primaryStage) throws Exception {
-		MapView mv = new MapView(new File("/Users/rb/IdeaProjects/MCMapViewer/maps/map_0.dat"));
+	public void start(Stage primaryStage) {
+		MapView mv = new MapView();
+		FileView fileView = new FileView();
+		fileView.setOnFileSelectionChanged(mv::loadMapFile);
 
 		primaryStage.setTitle("MCMapViewer");
+
+		SplitPane split = new SplitPane(fileView, mv);
+
 		BorderPane pane = new BorderPane();
-		pane.setTop(new OptionBar(primaryStage));
-		pane.setCenter(mv);
+		pane.setTop(new OptionBar(primaryStage, fileView));
+		pane.setCenter(split);
 		pane.setBottom(new InfoPanel(mv));
 
 		Scene scene = new Scene(pane, 560, 600);
@@ -65,14 +72,6 @@ public class Window extends Application {
 			scene.getStylesheets().add(styleSheet);
 		}
 
-		primaryStage.setOnCloseRequest(e -> {
-			try {
-				mv.writeFile();
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-			System.exit(0);
-		});
 		primaryStage.setScene(scene);
 		primaryStage.show();
 	}

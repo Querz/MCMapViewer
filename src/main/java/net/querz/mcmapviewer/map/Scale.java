@@ -1,4 +1,4 @@
-package net.querz.mcmapviewer;
+package net.querz.mcmapviewer.map;
 
 public enum Scale {
 

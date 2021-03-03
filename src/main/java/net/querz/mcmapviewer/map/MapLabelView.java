@@ -1,4 +1,4 @@
-package net.querz.mcmapviewer;
+package net.querz.mcmapviewer.map;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

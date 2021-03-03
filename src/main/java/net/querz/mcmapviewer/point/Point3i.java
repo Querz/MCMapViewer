@@ -1,4 +1,4 @@
-package net.querz.mcmapviewer;
+package net.querz.mcmapviewer.point;
 
 import java.util.Objects;
 
@@ -166,10 +166,5 @@ public class Point3i implements Cloneable {
 			e.printStackTrace();
 		}
 		return null;
-	}
-
-	public Point3i print() {
-		System.out.print(this);
-		return this;
 	}
 }

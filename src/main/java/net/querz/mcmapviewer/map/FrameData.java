@@ -1,4 +1,6 @@
-package net.querz.mcmapviewer;
+package net.querz.mcmapviewer.map;
+
+import net.querz.mcmapviewer.point.Point3i;
 
 public class FrameData {
 

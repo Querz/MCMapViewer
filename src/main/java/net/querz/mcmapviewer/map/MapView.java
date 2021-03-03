@@ -1,4 +1,4 @@
-package net.querz.mcmapviewer;
+package net.querz.mcmapviewer.map;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -36,6 +36,9 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import net.querz.mcmapviewer.io.FileHelper;
+import net.querz.mcmapviewer.point.Point2i;
+import net.querz.mcmapviewer.point.Point3i;
 import net.querz.nbt.io.NamedTag;
 import net.querz.nbt.tag.CompoundTag;
 import net.querz.nbt.tag.ListTag;
@@ -78,7 +81,7 @@ public class MapView extends StackPane {
 
 	public static final Color BANNER_TEXT_BACKGROUND = new Color(0.1f, 0.1f, 0.1f, 0.8f);
 
-	public MapView(File mapFile) {
+	public MapView() {
 		getStyleClass().add("map-view");
 
 		// background must be 3 pixels larger on all sides
@@ -98,13 +101,9 @@ public class MapView extends StackPane {
 		overlay.setOnDragDone(this::onDragDone);
 		overlay.setOnDragDropped(this::onDragDropped);
 
-//		overlay.setBackground(new Background(new BackgroundFill(new Color(1, 0, 0, 0.5), new CornerRadii(0), new Insets(0))));
-
 		getChildren().addAll(background, canvas, overlay);
 
 		updateBackground();
-
-		loadMapFile(mapFile);
 	}
 
 	private void onDragDetected(MouseEvent e) {

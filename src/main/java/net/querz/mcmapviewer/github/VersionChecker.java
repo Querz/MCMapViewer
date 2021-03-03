@@ -1,4 +1,4 @@
-package net.querz.mcmapviewer;
+package net.querz.mcmapviewer.github;
 
 import org.json.JSONException;
 import org.json.JSONObject;

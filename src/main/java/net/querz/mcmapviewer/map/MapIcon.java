@@ -1,10 +1,11 @@
-package net.querz.mcmapviewer;
+package net.querz.mcmapviewer.map;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
+import net.querz.mcmapviewer.io.FileHelper;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;

@@ -15,6 +15,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import net.querz.mcmapviewer.github.VersionChecker;
+import net.querz.mcmapviewer.io.FileHelper;
+
 import java.awt.*;
 import java.io.IOException;
 import java.net.URISyntaxException;

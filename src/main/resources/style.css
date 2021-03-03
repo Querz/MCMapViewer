@@ -157,6 +157,39 @@
 	-fx-background-color: #3c3f41;
 }
 
+/*---------- LIST VIEW ----------*/
+
+.list-view {
+	-fx-background-color: #3c3f41;
+}
+
+.list-view .indexed-cell:even {
+	-fx-background-color: #3c3f41;
+}
+
+.list-view .indexed-cell:odd {
+	-fx-background-color: #46494b;
+}
+
+.list-view .cell {
+	-fx-text-fill: #f2f2f2;
+}
+
+.list-view .list-cell:selected {
+	-fx-background-color: #00bfff;
+}
+
+/*---------- SPLIT PANE ----------*/
+
+.split-pane {
+	-fx-background-color: #262626;
+}
+
+.split-pane-divider {
+	-fx-background-color: #5e6060;
+	-fx-pref-width: 4;
+}
+
 /*---------- BUTTON ----------*/
 
 .button {

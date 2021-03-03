@@ -8,13 +8,13 @@ public final class DialogHelper {
 
 	private DialogHelper() {}
 
-	public static void openDirectory(Stage primaryStage) {
+	public static void openDirectory(Stage primaryStage, FileView fileView) {
 		String savesDir = getMCSavesDir();
 		File file = createDirectoryChooser(savesDir).showDialog(primaryStage);
 		if (file != null && file.isDirectory()) {
 			File[] files = file.listFiles((dir, name) -> name.matches("^map_\\d+\\.dat$"));
 			if (files != null && files.length > 0) {
-				Config.setMapDir(file);
+				fileView.setDirectory(file);
 			}
 		}
 	}
