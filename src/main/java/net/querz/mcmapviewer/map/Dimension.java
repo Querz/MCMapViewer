@@ -2,15 +2,17 @@ package net.querz.mcmapviewer.map;
 
 public enum Dimension {
 
-	OVERWORLD(0, "Overworld"),
-	THE_END(1, "The End"),
-	NETHER(-1, "Nether");
+	OVERWORLD(0, "minecraft:overworld", "Overworld"),
+	THE_END(1, "minecraft:the_end", "The End"),
+	NETHER(-1, "minecraft:nether", "Nether");
 
 	private int id;
+	private String textID;
 	private String text;
 
-	Dimension(int id, String text) {
+	Dimension(int id, String textID, String text) {
 		this.id = id;
+		this.textID = textID;
 		this.text = text;
 	}
 
@@ -28,7 +30,20 @@ public enum Dimension {
 		throw new IllegalArgumentException("invalid dimension: " + id);
 	}
 
+	public static Dimension byTextId(String id) {
+		for (Dimension dimension : values()) {
+			if (dimension.textID.equals(id)) {
+				return dimension;
+			}
+		}
+		throw new IllegalArgumentException("invalid dimension: " + id);
+	}
+
 	public int getId() {
 		return id;
+	}
+
+	public String getTextID() {
+		return textID;
 	}
 }

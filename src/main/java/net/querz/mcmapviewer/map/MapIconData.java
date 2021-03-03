@@ -1,6 +1,7 @@
 package net.querz.mcmapviewer.map;
 
 import javafx.scene.text.Text;
+import net.querz.mcmapviewer.point.Point2i;
 import net.querz.mcmapviewer.point.Point3i;
 import net.querz.nbt.tag.CompoundTag;
 import org.json.JSONArray;
@@ -36,18 +37,25 @@ public class MapIconData {
 	}
 
 	public void setName(String name) {
-		this.name = name;
 		try {
 			textElements = parseJson(name);
 			if (textElements.size() == 0) {
 				throw new Exception();
 			}
 			System.out.println("parsed json text");
+			this.name = name;
 		} catch (Exception e) {
 			textElements = new ArrayList<>();
 			textElements.add(TextColor.createText(name, "", false, false, false, false));
 			System.out.println("did not parse json text");
+			this.name = createJSONObjectName(name);
 		}
+	}
+
+	private String createJSONObjectName(String name) {
+		JSONObject stringName = new JSONObject();
+		stringName.put("text", name);
+		return stringName.toString();
 	}
 
 	public MapIcon getColor() {
@@ -90,7 +98,7 @@ public class MapIconData {
 	}
 
 	private void addTextElement(JSONObject map, List<Text> textElements) {
-		String text = (String) map.get("text");
+		String text = map.getString("text");
 		if (text == null) {
 			return;
 		}
@@ -100,19 +108,19 @@ public class MapIconData {
 		boolean strikethrough = map.has("strikethrough") && map.getBoolean("strikethrough");
 		boolean underline = map.has("underline") && map.getBoolean("underline");
 
-		Text textELement = TextColor.createText(text, color, bold, italic, strikethrough, underline);
-		textElements.add(textELement);
+		Text textElement = TextColor.createText(text, color, bold, italic, strikethrough, underline);
+		textElements.add(textElement);
 	}
 
-	public CompoundTag toTag() {
+	public CompoundTag toTag(Point2i offset) {
 		CompoundTag icon = new CompoundTag();
 
 		icon.putString("Color", color.getName());
 		icon.putString("Name", name);
 		CompoundTag pos = new CompoundTag();
-		pos.putInt("X", this.pos.getX());
+		pos.putInt("X", this.pos.getX() + offset.getX());
 		pos.putInt("Y", this.pos.getY());
-		pos.putInt("Z", this.pos.getZ());
+		pos.putInt("Z", this.pos.getZ() + offset.getZ());
 		icon.put("Pos", pos);
 		return icon;
 	}

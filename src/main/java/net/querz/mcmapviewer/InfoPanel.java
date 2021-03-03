@@ -50,7 +50,6 @@ public class InfoPanel extends BorderPane {
 	 * -------------------------------------------------------
 	 * */
 
-	private final Label idLabel = new Label("ID:");
 	private final Label xCenterLabel = new Label("X-Center:");
 	private final Label zCenterLabel = new Label("Z-Center:");
 	private final Label scaleLabel = new Label("Scale:");
@@ -58,8 +57,8 @@ public class InfoPanel extends BorderPane {
 	private final Label trackingPositionLabel = new Label("Tracking position:");
 	private final Label unlimitedTrackingLabel = new Label("Unlimited tracking:");
 	private final Label lockedLabel = new Label("Locked:");
+	private final Label dataVersionLabel = new Label("DataVersion:");
 
-	private final TextField idField = new TextField();
 	private final TextField xCenterField = new TextField();
 	private final TextField zCenterField = new TextField();
 	private final ComboBox<Scale> scaleField = new ComboBox<>();
@@ -67,6 +66,9 @@ public class InfoPanel extends BorderPane {
 	private final CheckBox trackingPositionField = new CheckBox();
 	private final CheckBox unlimitedTrackingField = new CheckBox();
 	private final CheckBox lockedField = new CheckBox();
+	private final TextField dataVersionField = new TextField();
+
+	private boolean loading = false;
 
 	public InfoPanel(MapView mapView) {
 		// arrange fields
@@ -82,6 +84,7 @@ public class InfoPanel extends BorderPane {
 		grid.add(pair(trackingPositionLabel, trackingPositionField), 1, 0);
 		grid.add(pair(unlimitedTrackingLabel, unlimitedTrackingField), 1, 1);
 		grid.add(pair(lockedLabel, lockedField), 1, 2);
+		grid.add(pair(dataVersionLabel, dataVersionField), 1, 3);
 
 		scaleField.valueProperty().bindBidirectional(mapView.scaleProperty());
 		dimensionField.valueProperty().bindBidirectional(mapView.dimensionProperty());
@@ -93,8 +96,22 @@ public class InfoPanel extends BorderPane {
 		StringConverter<Number> converter = new NumberStringConverter(format);
 		Bindings.bindBidirectional(xCenterField.textProperty(), mapView.xCenterProperty(), converter);
 		Bindings.bindBidirectional(zCenterField.textProperty(), mapView.zCenterProperty(), converter);
+		Bindings.bindBidirectional(dataVersionField.textProperty(), mapView.dataVersionProperty(), converter);
+
+		scaleField.valueProperty().addListener((v, o, n) -> {if (!loading) mapView.getMapFile().setEdited(true);});
+		dimensionField.valueProperty().addListener((v, o, n) -> {if (!loading) mapView.getMapFile().setEdited(true);});
+		trackingPositionField.selectedProperty().addListener((v, o, n) -> {if (!loading) mapView.getMapFile().setEdited(true);});
+		unlimitedTrackingField.selectedProperty().addListener((v, o, n) -> {if (!loading) mapView.getMapFile().setEdited(true);});
+		lockedField.selectedProperty().addListener((v, o, n) -> {if (!loading) mapView.getMapFile().setEdited(true);});
+		xCenterField.textProperty().addListener((v, o, n) -> {if (!loading) mapView.getMapFile().setEdited(true);});
+		zCenterField.textProperty().addListener((v, o, n) -> {if (!loading) mapView.getMapFile().setEdited(true);});
+		dataVersionField.textProperty().addListener((v, o, n) -> {if (!loading) mapView.getMapFile().setEdited(true);});
 
 		setCenter(grid);
+	}
+
+	public void setLoading(boolean loading) {
+		this.loading = loading;
 	}
 
 	private HBox pair(Label label, Node value) {

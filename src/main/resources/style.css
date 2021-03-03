@@ -85,7 +85,7 @@
 
 .grid .label {
 	-fx-text-fill: #f2f2f2;
-	-fx-pref-width: 110;
+	-fx-pref-width: 120;
 	-fx-pref-height: 30;
 }
 
@@ -161,6 +161,9 @@
 
 .list-view {
 	-fx-background-color: #3c3f41;
+	-fx-pref-width: 150;
+	-fx-max-width: 150;
+	-fx-min-width: 100;
 }
 
 .list-view .indexed-cell:even {

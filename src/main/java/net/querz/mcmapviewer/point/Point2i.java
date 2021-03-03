@@ -19,7 +19,7 @@ public class Point2i implements Cloneable {
 		return x;
 	}
 
-	public int getY() {
+	public int getZ() {
 		return z;
 	}
 
@@ -27,7 +27,7 @@ public class Point2i implements Cloneable {
 		this.x = x;
 	}
 
-	public void setY(int z) {
+	public void setZ(int z) {
 		this.z = z;
 	}
 

@@ -52,6 +52,8 @@ public class Window extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		MapView mv = new MapView();
+		InfoPanel info = new InfoPanel(mv);
+		mv.setInfoPanel(info);
 		FileView fileView = new FileView();
 		fileView.setOnFileSelectionChanged(mv::loadMapFile);
 
@@ -62,7 +64,7 @@ public class Window extends Application {
 		BorderPane pane = new BorderPane();
 		pane.setTop(new OptionBar(primaryStage, fileView, mv));
 		pane.setCenter(split);
-		pane.setBottom(new InfoPanel(mv));
+		pane.setBottom(info);
 
 		Scene scene = new Scene(pane, 560, 600);
 

@@ -36,13 +36,18 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import net.querz.mcmapviewer.EditableFile;
+import net.querz.mcmapviewer.InfoPanel;
 import net.querz.mcmapviewer.io.FileHelper;
 import net.querz.mcmapviewer.point.Point2i;
 import net.querz.mcmapviewer.point.Point3i;
 import net.querz.nbt.io.NamedTag;
 import net.querz.nbt.tag.CompoundTag;
+import net.querz.nbt.tag.IntTag;
 import net.querz.nbt.tag.ListTag;
 import net.querz.nbt.io.NBTUtil;
+import net.querz.nbt.tag.StringTag;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -60,11 +65,12 @@ public class MapView extends StackPane {
 	private Pane overlay;
 
 	private CompoundTag root;
-	private File mapFile;
+	private EditableFile mapFile;
 	private byte[] imageData;
 
 	private static Image backgroundImage = FileHelper.getIconFromResources("map_background");
 
+	private IntegerProperty dataVersion = new SimpleIntegerProperty();
 	private IntegerProperty xCenter = new SimpleIntegerProperty();
 	private IntegerProperty zCenter = new SimpleIntegerProperty();
 	private ObjectProperty<Scale> scale = new SimpleObjectProperty<>();
@@ -74,6 +80,8 @@ public class MapView extends StackPane {
 	private BooleanProperty locked = new SimpleBooleanProperty();
 	private List<MapIconData> banners = new ArrayList<>();
 	private List<FrameData> frames = new ArrayList<>();
+
+	private InfoPanel infoPanel;
 
 	private MapIconView draggedIcon;
 	private Point2i draggedOffsetOnIcon;
@@ -106,6 +114,10 @@ public class MapView extends StackPane {
 		updateBackground();
 	}
 
+	public void setInfoPanel(InfoPanel infoPanel) {
+		this.infoPanel = infoPanel;
+	}
+
 	private void onDragDetected(MouseEvent e) {
 		if (e.getButton() != MouseButton.PRIMARY) {
 			return;
@@ -124,6 +136,7 @@ public class MapView extends StackPane {
 			cbc.put(ICON_DATA_FORMAT, true);
 			db.setContent(cbc);
 			e.consume();
+			mapFile.setEdited(true);
 		}
 	}
 
@@ -221,6 +234,7 @@ public class MapView extends StackPane {
 			overlay.getChildren().add(iconGrid);
 
 			iconGrid.setOnMouseExited(a -> Platform.runLater(() -> overlay.getChildren().remove(iconGrid)));
+			mapFile.setEdited(true);
 
 		} else if (e.getTarget() instanceof Text && ((Text) e.getTarget()).getParent() instanceof MapLabelView || e.getTarget() instanceof  MapLabelView) {
 			MapLabelView parent = e.getTarget() instanceof MapLabelView ? (MapLabelView) e.getTarget() : (MapLabelView) ((Text) e.getTarget()).getParent();
@@ -248,6 +262,7 @@ public class MapView extends StackPane {
 			Platform.runLater(text::requestFocus);
 
 			text.widthProperty().addListener((i, o, n) -> parent.getIcon().translateLabel(text, parent.getIcon().getOffset(), text.getWidth(), text.getHeight()));
+			mapFile.setEdited(true);
 		} else if (e.getTarget() == overlay) {
 			Point2i posInWorld = getPosInWorld(e.getX(), e.getY());
 			if (posInWorld == null) {
@@ -257,6 +272,7 @@ public class MapView extends StackPane {
 			MapIconData mapIconData = new MapIconData("Banner", MapIcon.BANNER_WHITE, posInWorld.toPoint3i());
 			this.banners.add(mapIconData);
 			update();
+			mapFile.setEdited(true);
 		}
 
 		System.out.println(e.getTarget().getClass().getName());
@@ -278,25 +294,29 @@ public class MapView extends StackPane {
 		}
 		Point2i mapPos = new Point2i(
 				imgPos.getX() * (int) (Math.pow(2, getScale().getId())),
-				imgPos.getY() * (int) (Math.pow(2, getScale().getId())));
+				imgPos.getZ() * (int) (Math.pow(2, getScale().getId())));
 		return mapPos
 				.add(getxCenter(), getzCenter())
 				.sub((int) (IMAGE_WIDTH * Math.pow(2, getScale().getId())) / 2,
 					 (int) (IMAGE_HEIGHT * Math.pow(2, getScale().getId())) / 2);
 	}
 
-	public void loadMapFile(File mapFile) {
+	public void loadMapFile(EditableFile mapFile) {
+		infoPanel.setLoading(true);
 		this.mapFile = mapFile;
 		clear();
 		try {
 			readFile();
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			infoPanel.setLoading(false);
 		}
 		update();
 	}
 
 	private void clear() {
+		dataVersion.setValue(0);
 		imageData = null;
 		xCenter.setValue(0);
 		zCenter.setValue(0);
@@ -312,7 +332,10 @@ public class MapView extends StackPane {
 	}
 
 	private void readFile() throws IOException {
-		NamedTag tag = NBTUtil.read(mapFile);
+
+
+
+		NamedTag tag = NBTUtil.read(mapFile.getFile());
 		if (tag == null || !(tag.getTag() instanceof CompoundTag)) {
 			throw new IOException("expected root to be CompoundTag, got " + (tag == null ? "null" : tag.getClass().getSimpleName()));
 		}
@@ -340,13 +363,18 @@ public class MapView extends StackPane {
 			}
 		}
 
+		dataVersion.setValue(root.getInt("DataVersion"));
 		locked.setValue(data.getBoolean("locked"));
 		scale.setValue(Scale.byId(data.getByte("scale")));
 		trackingPosition.setValue(data.getBoolean("trackingPosition"));
 		unlimitedTracking.setValue(data.getBoolean("unlimitedTracking"));
 		xCenter.setValue(data.getInt("xCenter"));
 		zCenter.setValue(data.getInt("zCenter"));
-		dimension.setValue(Dimension.byId(data.getInt("dimension")));
+		if (data.get("dimension").getID() == IntTag.ID) {
+			dimension.setValue(Dimension.byId(data.getInt("dimension")));
+		} else if (data.get("dimension").getID() == StringTag.ID) {
+			dimension.setValue(Dimension.byTextId(data.getString("dimension")));
+		}
 		imageData = data.getByteArray("colors");
 		if (imageData.length != IMAGE_WIDTH * IMAGE_HEIGHT) {
 			imageData = new byte[IMAGE_WIDTH * IMAGE_HEIGHT];
@@ -355,20 +383,27 @@ public class MapView extends StackPane {
 
 	public void writeFile() throws IOException {
 		CompoundTag data = root.getCompoundTag("data");
+		root.putInt("DataVersion", dataVersion.getValue());
 		data.putBoolean("locked", locked.getValue());
 		data.putByte("scale", scale.getValue().getId());
 		data.putBoolean("trackingPosition", trackingPosition.getValue());
 		data.putBoolean("unlimitedTracking", unlimitedTracking.getValue());
-		data.putInt("xCenter", xCenter.getValue());
-		data.putInt("zCenter", zCenter.getValue());
-		data.putInt("dimension", dimension.getValue().getId());
+		// TODO: look up which dataversion supports string ids and which int ids
+		data.putString("dimension", dimension.getValue().getTextID());
 		data.putByteArray("colors", imageData);
 
+		Point2i offset = new Point2i(xCenter.get() - data.getInt("xCenter"), zCenter.get() - data.getInt("zCenter"));
+
 		ListTag<CompoundTag> icons = new ListTag<>(CompoundTag.class);
-		banners.forEach(b -> icons.add(b.toTag()));
+		banners.forEach(b -> icons.add(b.toTag(offset)));
 		data.put("banners", icons);
 
-		NBTUtil.write(root, mapFile);
+		data.putInt("xCenter", xCenter.getValue());
+		data.putInt("zCenter", zCenter.getValue());
+
+		NBTUtil.write(root, mapFile.getFile());
+
+		mapFile.setEdited(false);
 	}
 
 	public void update() {
@@ -548,7 +583,23 @@ public class MapView extends StackPane {
 		this.zCenter.set(zCenter);
 	}
 
+	public IntegerProperty dataVersionProperty() {
+		return dataVersion;
+	}
+
+	public int getDataVersion() {
+		return dataVersion.get();
+	}
+
+	public void setDataVersion(int dataVersion) {
+		this.dataVersion.set(dataVersion);
+	}
+
 	public void showMapIcons(boolean show) {
 		overlay.setVisible(show);
+	}
+
+	public EditableFile getMapFile() {
+		return mapFile;
 	}
 }

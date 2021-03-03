@@ -59,10 +59,10 @@ public class MapIconView extends Label {
 		} else if (iconPos.getX() > size.getX() - getWidth() / 2) {
 			iconPos.setX((int) (size.getX() - getWidth() / 2));
 		}
-		if (iconPos.getY() + getHeight() / 2 < 0) {
-			iconPos.setY((int) -(getHeight() / 2));
-		} else if (iconPos.getY() > size.getY() - getHeight() / 2) {
-			iconPos.setY((int) (size.getY() - getHeight() / 2));
+		if (iconPos.getZ() + getHeight() / 2 < 0) {
+			iconPos.setZ((int) -(getHeight() / 2));
+		} else if (iconPos.getZ() > size.getZ() - getHeight() / 2) {
+			iconPos.setZ((int) (size.getZ() - getHeight() / 2));
 		}
 
 		iconPos = iconPos.add(offset);
@@ -71,7 +71,7 @@ public class MapIconView extends Label {
 		iconPos = iconPos.sub(iconPos.mod(scale));
 
 		setTranslateX(iconPos.getX());
-		setTranslateY(iconPos.getY());
+		setTranslateY(iconPos.getZ());
 
 		translateLabel(label, offset, label.getWidth(), label.getHeight());
 
@@ -90,17 +90,17 @@ public class MapIconView extends Label {
 		} else if (labelPos.getX() > overlaySize.getX() - width) {
 			labelPos.setX((int) (overlaySize.getX() - width));
 		}
-		if (labelPos.getY() < offset.getY() + getHeight() / 2) {
-			labelPos.setY(offset.getY() + (int) getHeight() / 2);
-		} else if (labelPos.getY() > overlaySize.getY() - height) {
-			labelPos.setY((int) (overlaySize.getY() - height));
+		if (labelPos.getZ() < offset.getZ() + getHeight() / 2) {
+			labelPos.setZ(offset.getZ() + (int) getHeight() / 2);
+		} else if (labelPos.getZ() > overlaySize.getZ() - height) {
+			labelPos.setZ((int) (overlaySize.getZ() - height));
 		}
 
 		// adjust pos to map pixel
 		labelPos = labelPos.sub(labelPos.mod(scale));
 
 		label.setTranslateX(labelPos.getX());
-		label.setTranslateY(labelPos.getY());
+		label.setTranslateY(labelPos.getZ());
 	}
 
 	void update() {
