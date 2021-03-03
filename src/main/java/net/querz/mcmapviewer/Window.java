@@ -60,7 +60,7 @@ public class Window extends Application {
 		SplitPane split = new SplitPane(fileView, mv);
 
 		BorderPane pane = new BorderPane();
-		pane.setTop(new OptionBar(primaryStage, fileView));
+		pane.setTop(new OptionBar(primaryStage, fileView, mv));
 		pane.setCenter(split);
 		pane.setBottom(new InfoPanel(mv));
 
