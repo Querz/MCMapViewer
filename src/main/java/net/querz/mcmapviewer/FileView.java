@@ -21,12 +21,29 @@ public class FileView extends ListView<EditableFile> {
 	}
 
 	public void reload() {
-		setDirectory(directory);
+		EditableFile selected = getSelectionModel().getSelectedItem();
+		File[] files = directory.listFiles((d, n) -> n.matches("map_[0-9]+\\.dat"));
+		if (files == null) {
+			this.files = new File[0];
+		}
+		this.files = files;
+		Arrays.sort(this.files);
+		getItems().clear();
+		Arrays.stream(this.files).forEach(f -> getItems().add(new EditableFile(f)));
+		getSelectionModel().select(selected);
+		if (onFileSelectionChanged != null) {
+			onFileSelectionChanged.accept(getSelectionModel().getSelectedItem());
+		}
 	}
 
 	public void setDirectory(File directory) {
+		File[] files = directory.listFiles((d, n) -> n.matches("map_[0-9]+\\.dat"));
+		if (files == null) {
+			this.files = new File[0];
+		}
+		this.files = files;
 		this.directory = directory;
-		this.files = directory.listFiles((d, n) -> n.matches("map_[0-9]+\\.dat"));
+		Arrays.sort(this.files);
 		getItems().clear();
 		Arrays.stream(this.files).forEach(f -> getItems().add(new EditableFile(f)));
 		getSelectionModel().select(0);
@@ -37,7 +54,7 @@ public class FileView extends ListView<EditableFile> {
 
 	public void setOnFileSelectionChanged(Consumer<EditableFile> consumer) {
 		onFileSelectionChanged = consumer;
-		setOnMousePressed(e -> {
+		getSelectionModel().selectedItemProperty().addListener((v, o, n) -> {
 			if (getSelectionModel().getSelectedItem() != null && !getSelectionModel().getSelectedItem().equals(selected)) {
 				for (EditableFile file : getItems()) {
 					if (file.isEdited()) {

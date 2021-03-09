@@ -6,6 +6,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.util.Callback;
 
 import java.io.File;
+import java.io.IOException;
 
 public class EditableFile {
 
@@ -35,5 +36,24 @@ public class EditableFile {
 	@Override
 	public String toString() {
 		return file.get().getName() + (edited.get() ? " *" : "");
+	}
+
+	@Override
+	public int hashCode() {
+		return getFile().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (!(other instanceof EditableFile)) {
+			return false;
+		}
+		EditableFile o = (EditableFile) other;
+
+		try {
+			return getFile().getCanonicalPath().equals(o.getFile().getCanonicalPath());
+		} catch (IOException ex) {
+			return false;
+		}
 	}
 }
