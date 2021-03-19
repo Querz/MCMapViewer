@@ -278,6 +278,10 @@ public class MapView extends StackPane {
 		System.out.println(e.getTarget().getClass().getName());
 	}
 
+	public void setImageData(byte[] data) {
+		imageData = data;
+	}
+
 	private Point2i getPosOnImg(double mouseX, double mouseY) {
 		int imgX = (int) (mouseX - 3 * SCALE * 2) / SCALE; // skip 3 pixels of background image
 		int imgY = (int) (mouseY - 3 * SCALE * 2) / SCALE;
@@ -315,7 +319,7 @@ public class MapView extends StackPane {
 		update();
 	}
 
-	private void clear() {
+	public void clear() {
 		dataVersion.setValue(0);
 		imageData = null;
 		xCenter.setValue(0);

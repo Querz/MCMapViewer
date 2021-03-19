@@ -17,6 +17,7 @@ public class OptionBar extends MenuBar {
 	private MenuItem open = new MenuItem("Open");
 	private MenuItem save = new MenuItem("Save");
 	private MenuItem reload = new MenuItem("Reload");
+	private MenuItem image = new MenuItem("Import image");
 	private MenuItem quit = new MenuItem("Quit");
 
 	private Label about = new Label("About");
@@ -24,11 +25,12 @@ public class OptionBar extends MenuBar {
 	public OptionBar(Stage primaryStage, FileView fileView, MapView mapView) {
 		getStyleClass().add("option-bar");
 
-		file.getItems().addAll(open, save, reload, new SeparatorMenuItem(), quit);
+		file.getItems().addAll(open, save, reload, image, new SeparatorMenuItem(), quit);
 
 		open.setOnAction(e -> DialogHelper.openDirectory(primaryStage, fileView));
-		reload.setOnAction(e -> fileView.reload());
 		save.setOnAction(e -> mapView.save());
+		reload.setOnAction(e -> fileView.reload());
+		image.setOnAction(e -> DialogHelper.importImage(primaryStage, mapView));
 		quit.setOnAction(e -> System.exit(0));
 
 		open.setAccelerator(new KeyCodeCombination(KeyCode.O, KeyCodeCombination.SHORTCUT_DOWN));

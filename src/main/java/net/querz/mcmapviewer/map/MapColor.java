@@ -63,6 +63,7 @@ public enum MapColor {
 	private int color;
 
 	private static Map<Integer, Integer> colors = new HashMap<>();
+	private static Map<Integer, Integer> ids = new HashMap<>();
 	private static Map<Integer, Color> javaFXColors = new HashMap<>();
 
 	private static final int[] mul = new int[]{180, 220, 255, 235};
@@ -85,6 +86,7 @@ public enum MapColor {
 				newC |= newB;
 
 				colors.put(newId, newC);
+				ids.put(newC, newId);
 				javaFXColors.put(newId, new Color((float) newR / 255f, (float) newG / 255f, (float) newB / 255f, (float) a / 255f));
 			}
 		}
@@ -101,6 +103,10 @@ public enum MapColor {
 
 	public static Color getJavaFXColor(int id) {
 		return javaFXColors.getOrDefault(id, Color.TRANSPARENT);
+	}
+
+	public static int getClosestColorID(int color) {
+		return ids.get(findClosestColor(color));
 	}
 
 	public static int findClosestColor(int color) {

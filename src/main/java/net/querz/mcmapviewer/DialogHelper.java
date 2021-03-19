@@ -1,8 +1,18 @@
 package net.querz.mcmapviewer;
 
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.image.Image;
+import javafx.scene.image.PixelFormat;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import net.querz.mcmapviewer.map.MapColor;
+import net.querz.mcmapviewer.map.MapView;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 
 public final class DialogHelper {
 
@@ -19,12 +29,49 @@ public final class DialogHelper {
 		}
 	}
 
+	public static void importImage(Stage primaryStage, MapView mapView) {
+		File file = createFileChooser(null, new FileChooser.ExtensionFilter("*.png Files", "*.png")).showOpenDialog(primaryStage);
+		if (file != null) {
+			try {
+				BufferedImage bufImg = ImageIO.read(file);
+
+				Image img = SwingFXUtils.toFXImage(bufImg, null);
+				int[] pixels = new int[MapView.IMAGE_WIDTH * MapView.IMAGE_HEIGHT];
+				img.getPixelReader().getPixels(0, 0, MapView.IMAGE_WIDTH, MapView.IMAGE_HEIGHT, PixelFormat.getIntArgbPreInstance(), pixels, 0, MapView.IMAGE_WIDTH);
+
+				byte[] closest = new byte[pixels.length];
+				for (int i = 0; i < pixels.length; i++) {
+					closest[i] = (byte) MapColor.findClosestColor(pixels[i]);
+				}
+
+				mapView.setImageData(closest);
+				mapView.update();
+
+
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	private static DirectoryChooser createDirectoryChooser(String initialDirectory) {
 		DirectoryChooser directoryChooser = new DirectoryChooser();
 		if (initialDirectory != null) {
 			directoryChooser.setInitialDirectory(new File(initialDirectory));
 		}
 		return directoryChooser;
+	}
+
+	private static FileChooser createFileChooser(String initialDirectory, FileChooser.ExtensionFilter filter) {
+		FileChooser fileChooser = new FileChooser();
+		if (filter != null) {
+			fileChooser.getExtensionFilters().add(filter);
+		}
+		if (initialDirectory != null) {
+			fileChooser.setInitialDirectory(new File(initialDirectory));
+		}
+		return fileChooser;
 	}
 
 	public static String getMCSavesDir() {
