@@ -48,7 +48,6 @@ import net.querz.nbt.tag.ListTag;
 import net.querz.nbt.io.NBTUtil;
 import net.querz.nbt.tag.StringTag;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -336,9 +335,6 @@ public class MapView extends StackPane {
 	}
 
 	private void readFile() throws IOException {
-
-
-
 		NamedTag tag = NBTUtil.read(mapFile.getFile());
 		if (tag == null || !(tag.getTag() instanceof CompoundTag)) {
 			throw new IOException("expected root to be CompoundTag, got " + (tag == null ? "null" : tag.getClass().getSimpleName()));
@@ -346,12 +342,12 @@ public class MapView extends StackPane {
 
 		root = (CompoundTag) tag.getTag();
 		System.out.println(root);
-		CompoundTag data = catchClassCastException(() -> root.getCompoundTag("data"));
+		CompoundTag data = catchException(() -> root.getCompoundTag("data"));
 		if (data == null) {
 			throw new IOException("unable to parse data tag");
 		}
 
-		ListTag<CompoundTag> banners = catchClassCastException(() -> data.getListTag("banners").asCompoundTagList());
+		ListTag<CompoundTag> banners = catchException(() -> data.getListTag("banners").asCompoundTagList());
 		if (banners != null) {
 			for (CompoundTag banner : banners) {
 				MapIconData mapIconData = new MapIconData(banner.getString("Name"), banner.getString("Color"), parsePos(banner.getCompoundTag("Pos")));
@@ -359,7 +355,7 @@ public class MapView extends StackPane {
 			}
 		}
 
-		ListTag<CompoundTag> frames = catchClassCastException(() -> data.getListTag("frames").asCompoundTagList());
+		ListTag<CompoundTag> frames = catchException(() -> data.getListTag("frames").asCompoundTagList());
 		if (frames != null) {
 			for (CompoundTag frame : frames) {
 				FrameData frameData = new FrameData(frame.getInt("EntityId"), frame.getInt("Rotation"), parsePos(frame.getCompoundTag("Pos")));
@@ -485,10 +481,10 @@ public class MapView extends StackPane {
 		}
 	}
 
-	private <T> T catchClassCastException(Supplier<T> s) {
+	private <T> T catchException(Supplier<T> s) {
 		try {
 			return s.get();
-		} catch (ClassCastException ex) {
+		} catch (Exception ex) {
 			System.out.println("error parsing value: " + ex.getMessage());
 			return null;
 		}

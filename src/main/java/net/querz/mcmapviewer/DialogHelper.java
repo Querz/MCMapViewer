@@ -10,6 +10,8 @@ import net.querz.mcmapviewer.map.MapColor;
 import net.querz.mcmapviewer.map.MapView;
 
 import javax.imageio.ImageIO;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -30,10 +32,12 @@ public final class DialogHelper {
 	}
 
 	public static void importImage(Stage primaryStage, MapView mapView) {
-		File file = createFileChooser(null, new FileChooser.ExtensionFilter("*.png Files", "*.png")).showOpenDialog(primaryStage);
+		File file = createFileChooser(null, new FileChooser.ExtensionFilter("*.png, *.jpg Files", "*.png", "*.jpg")).showOpenDialog(primaryStage);
 		if (file != null) {
 			try {
 				BufferedImage bufImg = ImageIO.read(file);
+
+				bufImg = scaleImage(bufImg, MapView.IMAGE_WIDTH, MapView.IMAGE_HEIGHT);
 
 				Image img = SwingFXUtils.toFXImage(bufImg, null);
 				int[] pixels = new int[MapView.IMAGE_WIDTH * MapView.IMAGE_HEIGHT];
@@ -41,7 +45,7 @@ public final class DialogHelper {
 
 				byte[] closest = new byte[pixels.length];
 				for (int i = 0; i < pixels.length; i++) {
-					closest[i] = (byte) MapColor.findClosestColor(pixels[i]);
+					closest[i] = (byte) MapColor.getClosestColorID(pixels[i]);
 				}
 
 				mapView.setImageData(closest);
@@ -101,5 +105,15 @@ public final class DialogHelper {
 
 	public static String getHomeDir() {
 		return System.getProperty("user.home");
+	}
+
+	public static BufferedImage scaleImage(BufferedImage before, int width, int height) {
+		double w = before.getWidth();
+		double h = before.getHeight();
+		BufferedImage after = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		AffineTransform at = new AffineTransform();
+		at.scale(width / w, height / h);
+		AffineTransformOp scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+		return scaleOp.filter(before, after);
 	}
 }
