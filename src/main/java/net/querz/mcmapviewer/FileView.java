@@ -1,5 +1,6 @@
 package net.querz.mcmapviewer;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
@@ -27,7 +28,7 @@ public class FileView extends ListView<EditableFile> {
 			this.files = new File[0];
 		}
 		this.files = files;
-		Arrays.sort(this.files);
+		Arrays.sort(this.files, this::compareMapFiles);
 		getItems().clear();
 		Arrays.stream(this.files).forEach(f -> getItems().add(new EditableFile(f)));
 		getSelectionModel().select(selected);
@@ -43,7 +44,7 @@ public class FileView extends ListView<EditableFile> {
 		}
 		this.files = files;
 		this.directory = directory;
-		Arrays.sort(this.files);
+		Arrays.sort(this.files, this::compareMapFiles);
 		getItems().clear();
 		Arrays.stream(this.files).forEach(f -> getItems().add(new EditableFile(f)));
 		getSelectionModel().select(0);
@@ -52,12 +53,21 @@ public class FileView extends ListView<EditableFile> {
 		}
 	}
 
+	private int compareMapFiles(File a, File b) {
+		String aName = a.getName();
+		String sa = aName.substring(4, aName.length() - 4);
+		String bName = b.getName();
+		String sb = bName.substring(4, bName.length() - 4);
+		return Integer.compare(Integer.parseInt(sa), Integer.parseInt(sb));
+	}
+
 	public void setOnFileSelectionChanged(Consumer<EditableFile> consumer) {
 		onFileSelectionChanged = consumer;
 		getSelectionModel().selectedItemProperty().addListener((v, o, n) -> {
 			if (getSelectionModel().getSelectedItem() != null && !getSelectionModel().getSelectedItem().equals(selected)) {
 				for (EditableFile file : getItems()) {
 					if (file.isEdited()) {
+						Platform.runLater(() -> getSelectionModel().select(file));
 						return;
 					}
 				}

@@ -51,8 +51,6 @@ public final class DialogHelper {
 				mapView.setImageData(closest);
 				mapView.update();
 
-
-
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

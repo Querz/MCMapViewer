@@ -279,6 +279,7 @@ public class MapView extends StackPane {
 
 	public void setImageData(byte[] data) {
 		imageData = data;
+		mapFile.setEdited(true);
 	}
 
 	private Point2i getPosOnImg(double mouseX, double mouseY) {
