@@ -4,9 +4,14 @@ A tool to view and edit Minecraft maps.
 
 ---
 
+<p align="center">
+  <img src="https://gist.githubusercontent.com/Querz/3437266bd85dc0d90fc14c940566b8db/raw/7fc122a2f5a868775a7ec44b01658fe211001612/mcamapviewer.png" alt="MCAMapViewer showing an edited map with custom banners">
+</p>
+
 ## Loading
 
-To load maps, select either the worlds `data` folder or a map file. Map files file names use the format `map_<id>.dat`, so e.g. `map_15.dat` is a valid map file name.
+To load maps, select a folder containing Minecraft map file. Map files file names use the format `map_<id>.dat`, so e.g. `map_15.dat` is a valid map file name.
+Minecraft usually stores map files in a world's `data` folder.
 
 ## Editing
 
