@@ -11,11 +11,11 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
+import javafx.util.converter.IntegerStringConverter;
 import javafx.util.converter.NumberStringConverter;
 import net.querz.mcmapviewer.map.Dimension;
 import net.querz.mcmapviewer.map.MapView;
 import net.querz.mcmapviewer.map.Scale;
-
 import java.text.NumberFormat;
 
 public class InfoPanel extends BorderPane {
@@ -91,12 +91,15 @@ public class InfoPanel extends BorderPane {
 		trackingPositionField.selectedProperty().bindBidirectional(mapView.trackingPositionProperty());
 		unlimitedTrackingField.selectedProperty().bindBidirectional(mapView.unlimitedTrackingProperty());
 		lockedField.selectedProperty().bindBidirectional(mapView.lockedProperty());
-		NumberFormat format = NumberFormat.getIntegerInstance();
-		format.setGroupingUsed(false);
-		StringConverter<Number> converter = new NumberStringConverter(format);
+
+		StringConverter<Integer> converter = new IntegerStringConverter();
 		Bindings.bindBidirectional(xCenterField.textProperty(), mapView.xCenterProperty(), converter);
 		Bindings.bindBidirectional(zCenterField.textProperty(), mapView.zCenterProperty(), converter);
-		Bindings.bindBidirectional(dataVersionField.textProperty(), mapView.dataVersionProperty(), converter);
+
+		NumberFormat format = NumberFormat.getIntegerInstance();
+		format.setGroupingUsed(false);
+		StringConverter<Number> numberConverter = new NumberStringConverter(format);
+		Bindings.bindBidirectional(dataVersionField.textProperty(), mapView.dataVersionProperty(), numberConverter);
 
 		scaleField.valueProperty().addListener((v, o, n) -> {if (!loading) mapView.getMapFile().setEdited(true);});
 		dimensionField.valueProperty().addListener((v, o, n) -> {if (!loading) mapView.getMapFile().setEdited(true);});

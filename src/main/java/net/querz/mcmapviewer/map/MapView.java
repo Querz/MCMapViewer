@@ -47,7 +47,6 @@ import net.querz.nbt.tag.IntTag;
 import net.querz.nbt.tag.ListTag;
 import net.querz.nbt.io.NBTUtil;
 import net.querz.nbt.tag.StringTag;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,8 +69,8 @@ public class MapView extends StackPane {
 	private static Image backgroundImage = FileHelper.getIconFromResources("map_background");
 
 	private IntegerProperty dataVersion = new SimpleIntegerProperty();
-	private IntegerProperty xCenter = new SimpleIntegerProperty();
-	private IntegerProperty zCenter = new SimpleIntegerProperty();
+	private ObjectProperty<Integer> xCenter = new SimpleObjectProperty<>();
+	private ObjectProperty<Integer> zCenter = new SimpleObjectProperty<>();
 	private ObjectProperty<Scale> scale = new SimpleObjectProperty<>();
 	private ObjectProperty<Dimension> dimension = new SimpleObjectProperty<>();
 	private BooleanProperty trackingPosition = new SimpleBooleanProperty();
@@ -109,6 +108,54 @@ public class MapView extends StackPane {
 		overlay.setOnDragDropped(this::onDragDropped);
 
 		getChildren().addAll(background, canvas, overlay);
+
+		scaleProperty().addListener((v, o, n) -> {
+			if (o == null || n == null) {
+				return;
+			}
+			System.out.println("changed scale from " + o + " to " + n);
+			// 1 --> 2; meaning we will multiply pos by 2
+			// 2 --> 1; meaning we will multiply pos by 0.5;
+			int diff = n.getId() - o.getId();
+			double change = Math.pow(2, diff);
+			for (MapIconData banner : banners) {
+				Point3i pos = banner.getPos();
+
+				Point3i relativePos = pos.sub(xCenter.getValue(), 0, zCenter.getValue());
+
+				relativePos.setX((int) (relativePos.getX() * change));
+				relativePos.setZ((int) (relativePos.getZ() * change));
+
+				banner.setPos(relativePos.add(xCenter.getValue(), 0, zCenter.getValue()));
+			}
+		});
+
+		xCenterProperty().addListener((v, o, n) -> {
+			if (o == null || n == null) {
+				return;
+			}
+
+			int diff = n.intValue() - o.intValue();
+			for (MapIconData banner : banners) {
+				banner.getPos().setX(banner.getPos().getX() + diff);
+			}
+
+			System.out.println("changed xCenter from " + o + " to " + n);
+
+		});
+		zCenterProperty().addListener((v, o, n) -> {
+			if (o == null || n == null) {
+				return;
+			}
+
+			int diff = n.intValue() - o.intValue();
+			for (MapIconData banner : banners) {
+				banner.getPos().setZ(banner.getPos().getZ() + diff);
+			}
+
+			System.out.println("changed zCenter from " + o + " to " + n);
+
+		});
 
 		updateBackground();
 	}
@@ -322,9 +369,9 @@ public class MapView extends StackPane {
 	public void clear() {
 		dataVersion.setValue(0);
 		imageData = null;
-		xCenter.setValue(0);
-		zCenter.setValue(0);
-		scale.setValue(Scale.SCALE_0);
+		xCenter.setValue(null);
+		zCenter.setValue(null);
+		scale.setValue(null);
 		dimension.setValue(Dimension.OVERWORLD);
 		trackingPosition.setValue(false);
 		unlimitedTracking.setValue(false);
@@ -393,10 +440,8 @@ public class MapView extends StackPane {
 		data.putString("dimension", dimension.getValue().getTextID());
 		data.putByteArray("colors", imageData);
 
-		Point2i offset = new Point2i(xCenter.get() - data.getInt("xCenter"), zCenter.get() - data.getInt("zCenter"));
-
 		ListTag<CompoundTag> icons = new ListTag<>(CompoundTag.class);
-		banners.forEach(b -> icons.add(b.toTag(offset)));
+		banners.forEach(b -> icons.add(b.toTag()));
 		data.put("banners", icons);
 
 		data.putInt("xCenter", xCenter.getValue());
@@ -425,6 +470,8 @@ public class MapView extends StackPane {
 		// calculate the location of the top-left corner of the map
 		Point2i nil = new Point2i(xCenter.getValue(), zCenter.getValue())
 				.sub(IMAGE_WIDTH * (int) Math.pow(2, scale.getValue().getId()) / 2, IMAGE_HEIGHT * (int) Math.pow(2, scale.getValue().getId()) / 2);
+
+		System.out.println("nil: " + nil);
 
 		for (MapIconData banner : banners) {
 
@@ -564,7 +611,7 @@ public class MapView extends StackPane {
 		return xCenter.get();
 	}
 
-	public IntegerProperty xCenterProperty() {
+	public ObjectProperty<Integer> xCenterProperty() {
 		return xCenter;
 	}
 
@@ -576,7 +623,7 @@ public class MapView extends StackPane {
 		return zCenter.get();
 	}
 
-	public IntegerProperty zCenterProperty() {
+	public ObjectProperty<Integer> zCenterProperty() {
 		return zCenter;
 	}
 

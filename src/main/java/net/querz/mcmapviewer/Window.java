@@ -6,8 +6,6 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import net.querz.mcmapviewer.map.MapView;
-
-import java.io.IOException;
 import java.net.URL;
 
 public class Window extends Application {

@@ -1,11 +1,12 @@
 package net.querz.mcmapviewer.map;
 
 import javafx.scene.text.Text;
-import net.querz.mcmapviewer.point.Point2i;
 import net.querz.mcmapviewer.point.Point3i;
+import net.querz.nbt.io.SNBTUtil;
 import net.querz.nbt.tag.CompoundTag;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -112,16 +113,21 @@ public class MapIconData {
 		textElements.add(textElement);
 	}
 
-	public CompoundTag toTag(Point2i offset) {
+	public CompoundTag toTag() {
 		CompoundTag icon = new CompoundTag();
 
 		icon.putString("Color", color.getName());
 		icon.putString("Name", name);
 		CompoundTag pos = new CompoundTag();
-		pos.putInt("X", this.pos.getX() + offset.getX());
+		pos.putInt("X", this.pos.getX());
 		pos.putInt("Y", this.pos.getY());
-		pos.putInt("Z", this.pos.getZ() + offset.getZ());
+		pos.putInt("Z", this.pos.getZ());
 		icon.put("Pos", pos);
+		try {
+			System.out.println("saving banner pos: " + SNBTUtil.toSNBT(pos));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		return icon;
 	}
 }
