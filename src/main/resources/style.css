@@ -182,6 +182,16 @@
 	-fx-background-color: #00bfff;
 }
 
+/*---------- SCROLL BAR ----------*/
+
+.scroll-bar {
+	-fx-background-color: #3c3f41;
+}
+
+.scroll-bar .thumb {
+	-fx-background-color: #7c7c7c;
+}
+
 /*---------- SPLIT PANE ----------*/
 
 .split-pane {
