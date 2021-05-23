@@ -1,6 +1,6 @@
 plugins {
-    id 'com.github.johnrengelman.shadow' version '5.1.0'
-    id 'com.eriwen.gradle.css' version '2.14.0'
+	id 'com.github.johnrengelman.shadow' version '5.1.0'
+	id 'com.eriwen.gradle.css' version '2.14.0'
 }
 
 apply plugin: 'java'
@@ -14,14 +14,37 @@ version '1.0'
 sourceCompatibility = 1.8
 
 repositories {
-    mavenCentral()
-    maven {
-        url 'https://jitpack.io/'
-    }
+	mavenCentral()
+	maven {
+		url 'https://jitpack.io/'
+	}
+}
+
+configurations {
+	project.configurations.implementation.canBeResolved = true
 }
 
 dependencies {
-    implementation 'com.github.Querz:NBT:4192a95c9d'
-    implementation 'org.json:json:20201115'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+	implementation 'com.github.Querz:NBT:4192a95c9d'
+	implementation 'org.json:json:20201115'
+	testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+jar {
+	archiveFileName = "${project.name}-${project.version}-min.jar"
+	manifest.attributes (
+			'Main-Class': 'net.querz.mcmapviewer.Main',
+			'Application-Version': project.version,
+			'Class-Path': configurations.implementation.files.collect{"lib/$it.name"}.join(' ')
+	)
+	exclude 'licenses/'
+	from 'LICENSE'
+}
+
+shadowJar {
+	minimize()
+	archiveFileName = "${project.name}-${project.version}.jar"
+	configurations = [project.configurations.implementation]
+	manifest.attributes('Class-Path': '')
+	from 'LICENSE'
 }
